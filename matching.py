@@ -11,10 +11,7 @@ import networkx as nx
 # INPUT:  Graph G, initial matching M on G
 # OUTPUT: maximum matching M* on G
 def find_maximum_matching(G, M):
-    # P = find_augmenting_path(G, M) # my implementation of blossom algorithm
-    # P = find_augmenting_path_max_matching(G, M) # faster networkx version
-    P = find_augmenting_path_micali_vazirani(G, M) # micali-vazirani version
-
+    P = find_augmenting_path(G, M) 
 
     if P == []:  # Base case
         return M
@@ -27,11 +24,13 @@ def find_maximum_matching(G, M):
         return find_maximum_matching(G, M)
 
 
+# returns the len of the path from a point to its root
 def dist_to_root(point, root, Graph):
     path = nx.shortest_path(Graph, source=point, target=root)
     return len(path) - 1
 
 
+# 
 def find_augmenting_path(G, M, Blossom_stack=None):
     if Blossom_stack is None:
         Blossom_stack = []
@@ -252,6 +251,7 @@ def find_augmenting_path(G, M, Blossom_stack=None):
     return P  # Empty path
 
 
+# faster way to find matchings using networkx
 def find_augmenting_path_max_matching(G, M, Blossom_stack=None):
     M_star = nx.max_weight_matching(G, maxcardinality=True)
 
@@ -279,7 +279,10 @@ def find_augmenting_path_max_matching(G, M, Blossom_stack=None):
 # Micali-Vazirani blossom algorithm: phase-based search (SEARCH/BLOSS-AUG/
 # FINDPATH/OPEN/base*) per Micali & Vazirani (1980) and Vazirani (2020),
 # ported from https://github.com/AlexanderSoloviev/mv-matching
+# Note: not fully working, just used to test speed.
+# Within 1% of the speed of find_augmenting_path_max_matching
 # ============================================================================
+
 
 # INPUT:  Graph G
 # OUTPUT: mate - dictionary such that mate[v] == w iff v and w are matched
@@ -737,6 +740,7 @@ def find_augmenting_path_micali_vazirani(G, M, Blossom_stack=None):
                 return nx.shortest_path(sub, source=a, target=b)
 
     return []  # M is already a maximum matching
+
 
 
 # ============================================================================

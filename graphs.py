@@ -93,10 +93,14 @@ def wheel_graph_adjacency_listing(n):
     return L
 
 
+# returns list of vertex labels for a wheel graph with n vertices total:
+# vertices 0... m-1 are the complete graph, is the hub
+# vertices m... n-1 are the independent nodes
 def complete_split_graph_nodes(m, n):
     return list(range(m + n))
 
 
+# returns adjacency listing for complete split graph Km + Kn
 def complete_split_graph_adjacency_listing(m, n):
     L = []
 

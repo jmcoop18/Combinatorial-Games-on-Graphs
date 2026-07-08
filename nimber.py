@@ -7,6 +7,9 @@ from matching import AAC_winner
 # Functions to find Nimbers
 # ============================================================================
 
+# returns the mex (minimum excluded value) of the list input
+# mex([0, 1, 3, 4]) -> returns 2
+# mex([0, 1, 2, 3]) -> returns 4
 def mex(values):
     values = set(values)
     m = 0
@@ -15,6 +18,7 @@ def mex(values):
     return m
 
 
+# returns the nimber for AAC on a graph G from a starting vertex v
 def find_nimber(G, v):
     M = nx.Graph()
     _, winner = AAC_winner(G, M, v)
@@ -29,6 +33,7 @@ def find_nimber(G, v):
     # make a copy of the game and remove v
     new_G = G.copy()
     new_G.remove_node(v)
+
 
     # recurse and save the nimbers for the layer below the node
     child_nimbers = [find_nimber(new_G, node) for node in new_vertices]
