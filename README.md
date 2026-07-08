@@ -13,7 +13,7 @@ For a starting vertex v, `find_nimber` determines the AAC winner from v (via `AA
 
 ### Setup
 
-networkx==3.6.1
+networkx==3.6.1  
 Python==3.13.7
 
 ### Usage
