@@ -80,8 +80,14 @@ def menu():
     print('(5) - Wheel Graph')
     print('(6) - Complete Split Graph')
     print('(7) - Custom Adjacency Listing')
-    choice = int(input('Enter the option you would like (1-7): '))
+    print('(q) - Quit')
+    choice = input('Enter the option you would like (1-7, \'q\' to quit): ').strip().lower()
     print()
+
+    if choice == 'q':
+        return False
+
+    choice = int(choice)
 
     print(' ===== Run Type ===== ')
     print('(1) - Single run (fixed size, fixed starting vertex)')
@@ -109,14 +115,14 @@ def menu():
         nodes_fn, adjacency_fn, label = (
             wheel_graph_nodes, wheel_graph_adjacency_listing, 'W')
     elif choice == 6:
-        if mode == 4:
+        if mode == 3:
             m_start = int(input('Starting complete graph size (m)? '))
             m_end = int(input('Ending complete graph size m (inclusive)? '))
             n_start = int(input('Starting independent node size n? '))
             n_end = int(input('Ending independent node size n (inclusive)? '))
             inner = input('Enter \'i\' to start from an inner vertex and \'o\' for an outer? ').strip().lower().startswith('i')
             iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner)
-            return
+            return True
         # complete split graphs take two sizes: fix the complete graph size m here, so
         # the single size parameter used below is the independent set size n
         m = int(input('Size of the complete graph (m)? '))
@@ -137,14 +143,14 @@ def menu():
             n_end = int(input(f'Ending size of {label} graph (inclusive)? '))
             v = read_vertex('What is your fixed starting vertex')
             iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v)
-            return
+            return True
 
         n = int(input(f'What size of graph? {label}'))
         G = build_graph(nodes_fn(n), adjacency_fn(n))
 
         if mode == 2:
             iterate_all_vertices(G)
-            return
+            return True
 
         v = read_vertex('What is your starting vertex')
         run_single(G, v)
@@ -160,11 +166,15 @@ def menu():
 
         if mode == 2:
             iterate_all_vertices(G)
-            return
+            return True
 
         v = int(input('What is your starting vertex? '))
         run_single(G, v)
 
+    return True
+
 
 if __name__ == '__main__':
-    menu()
+    while menu():
+        input('\nPress Enter to continue...')
+        print()
