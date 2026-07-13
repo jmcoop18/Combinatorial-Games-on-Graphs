@@ -65,14 +65,15 @@ LAYOUTS = {
 
 
 # guess a layout from the node labels: (row, col) tuples where row r has at
-# most r+1 columns -> tri grid; (layer, index) with layers {0, 1} -> prism;
+# most r+1 columns -> tri grid; (layer, index) with layers {0, 1} -> prism if
+# 3-regular (a 2-row rectangular grid has the same labels but degree-2 corners);
 # other tuples -> grid; integers -> cycle (hub-centered wheel if node 0 is
 # adjacent to everything else)
 def guess_layout(G):
     nodes = list(G.nodes())
     if all(isinstance(n, tuple) and len(n) == 2 for n in nodes):
         layers = {n[0] for n in nodes}
-        if layers == {0, 1}:
+        if layers == {0, 1} and all(d == 3 for _, d in G.degree()):
             return 'prism'
         if all(c <= r for r, c in nodes):
             return 'tri'

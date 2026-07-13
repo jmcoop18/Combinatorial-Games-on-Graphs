@@ -98,19 +98,28 @@ def is_even_kernel(G, S):
     )
 
 
-# the null-space basis as vertex sets. These are CANDIDATES, not necessarily
-# even kernels themselves: every even kernel is an XOR (symmetric difference)
-# of a subset of them, but a combination only counts if it is independent.
-def null_space_sets(G, nodes=None):
+
     A, nodes, _ = adjacency_matrix_gf2(G, nodes)
     basis, _, _ = null_space_basis(A)
     return [[nodes[i] for i, b in enumerate(v) if b] for v in basis], nodes
 
 
+# every vertex outside S is adjacent to exactly 0 or 2 vertices in S?
+# (stricter than evenness: rules out 4, 6, ... neighbors in S)
+def has_zero_or_two_neighbors(G, S):
+    Sset = set(S)
+    return all(
+        sum(1 for w in G.neighbors(u) if w in Sset) in (0, 2)
+        for u in G.nodes() if u not in Sset
+    )
+
+
 # every even kernel: XOR all 2^(#basis) combinations of the null-space basis,
 # keep the ones whose support is independent (evenness outside S is already
 # guaranteed by A x = 0). include_empty=False drops the trivial empty kernel.
-def all_even_kernels(G, nodes=None, include_empty=False):
+# zero_or_two=True keeps only kernels where each vertex outside S has exactly
+# 0 or 2 neighbors in S.
+def all_even_kernels(G, nodes=None, include_empty=False, zero_or_two=False):
     A, nodes, _ = adjacency_matrix_gf2(G, nodes)
     basis, _, _ = null_space_basis(A)
     N = len(nodes)
@@ -121,8 +130,11 @@ def all_even_kernels(G, nodes=None, include_empty=False):
             if c:
                 x = [a ^ b for a, b in zip(x, vec)]
         S = [nodes[i] for i, b in enumerate(x) if b]
-        if (S or include_empty) and is_independent(G, S):
-            kernels.append(S)
+        if not (S or include_empty) or not is_independent(G, S):
+            continue
+        if zero_or_two and not has_zero_or_two_neighbors(G, S):
+            continue
+        kernels.append(S)
     return kernels, nodes
 
 
@@ -197,20 +209,6 @@ def visualize_even_kernels(G, nodes=None, layout=None, name="G", max_panels=16):
         kernels = kernels[:max_panels]
     return visualize_kernels(G, kernels, layout=layout, name=name)
 
-
-if __name__ == "__main__":
-    from graphs import (
-        build_graph,
-        tri_grid_graph_nodes, tri_grid_graph_adjacency_listing,
-        prism_graph_nodes, prism_graph_adjacency_listing,
-        cycle_graph_nodes, cycle_graph_adjacency_listing,
-    )
-
-    n = 600
-    # G = build_graph(tri_grid_graph_nodes(n), tri_grid_graph_adjacency_listing(n))
-    # name = f"T{n} (tri_grid n={n})"
-    # walkthrough(G, name=name)
-    # visualize_even_kernels(G, name=name)
 
     G = build_graph(prism_graph_nodes(n), prism_graph_adjacency_listing(n))
     walkthrough(G, name="prism n={n}")

@@ -117,6 +117,49 @@ def complete_split_graph_adjacency_listing(m, n):
     return L
 
 
+# returns list of vertex labels 0..n-1 for the complete graph Kn
+def complete_graph_nodes(n):
+    return list(range(n))
+
+
+# returns adjacency listing for the complete graph Kn: every pair of vertices
+def complete_graph_adjacency_listing(n):
+    return [(i, j) for i in range(n) for j in range(i + 1, n)]
+
+
+# returns list of (part, index) vertex labels for the complete multipartite
+# graph K(m,...,m) with parts groups of m vertices each
+def complete_multipartite_graph_nodes(parts, m):
+    return [(p, i) for p in range(parts) for i in range(m)]
+
+
+# returns adjacency listing for K(m,...,m): every pair of vertices in
+# different parts is joined, no edges within a part
+def complete_multipartite_graph_adjacency_listing(parts, m):
+    nodes = complete_multipartite_graph_nodes(parts, m)
+    return [(u, w) for a, u in enumerate(nodes) for w in nodes[a + 1:]
+            if u[0] != w[0]]
+
+
+# returns list of (row, col) vertex labels for a rectangular grid graph
+# with m rows and n columns
+def rect_grid_graph_nodes(m, n):
+    return [(r, c) for r in range(m) for c in range(n)]
+
+
+# returns adjacency listing for the m-row by n-column rectangular grid:
+# each vertex connects to its right and downward neighbors
+def rect_grid_graph_adjacency_listing(m, n):
+    L = []
+    for r in range(m):
+        for c in range(n):
+            if c + 1 < n:
+                L.append(((r, c), (r, c + 1)))
+            if r + 1 < m:
+                L.append(((r, c), (r + 1, c)))
+    return L
+
+
 # build graph from adj listing
 # nodes can be an int (creates nodes 0..nodes-1) or an explicit iterable of node labels
 def build_graph(nodes, listing):
