@@ -1,3 +1,6 @@
+# old method, replaced by gf2_even_kernel.py
+# *incomplete*
+
 from graphs import (
     build_graph,
     prism_graph_nodes, prism_graph_adjacency_listing,
@@ -8,38 +11,10 @@ from graphs import (
     complete_split_graph_nodes, complete_split_graph_adjacency_listing,
 )
 
-import math
-
 import networkx as nx
 import matplotlib.pyplot as plt
 
-
-# square/rectangular grids: nodes are (row, col) tuples, plotted on a regular grid
-def _grid_pos(G):
-    return {node: (node[1], -node[0]) for node in G.nodes()}
-
-
-# triangular grids: nodes are (row, col) tuples (tri_grid_graph_nodes), but each
-# row is offset by half a step and rows are spaced by sqrt(3)/2 so triangles come
-# out equilateral instead of right-angled
-def _tri_grid_pos(G):
-    return {node: (node[1] - node[0] / 2, -node[0] * (3 ** 0.5) / 2) for node in G.nodes()}
-
-
-# prism graphs: nodes are (layer, index) tuples, layer 0 is the outer ring and
-# layer 1 the inner ring; laid out as two concentric circles
-def _prism_pos(G):
-    n = max(index for _, index in G.nodes()) + 1
-    pos = {}
-    for node in G.nodes():
-        layer, index = node
-        radius = 2.0 if layer == 0 else 1.0
-        theta = 2 * math.pi * index / n - math.pi / 2
-        pos[node] = (radius * math.cos(theta), radius * math.sin(theta))
-    return pos
-
-
-_LAYOUTS = {'grid': _grid_pos, 'tri': _tri_grid_pos, 'prism': _prism_pos}
+from visualize import LAYOUTS as _LAYOUTS
 
 
 def visualize_grid_kernel(G, S, notS, v=None, layout='grid'):
@@ -110,11 +85,11 @@ def find_even_kernel(G, v, S, notS, depth=0):
     [find_even_kernel(G, n, S, notS, depth+1) for n in new_to_S]
 
 
-n = 12
-# G = build_graph(tri_grid_graph_nodes(n), tri_grid_graph_adjacency_listing(n))
-# layout = 'tri'
-G = build_graph(prism_graph_nodes(n), prism_graph_adjacency_listing(n))
-layout = 'prism'
+n = 3
+G = build_graph(tri_grid_graph_nodes(n), tri_grid_graph_adjacency_listing(n))
+layout = 'tri'
+# G = build_graph(prism_graph_nodes(n), prism_graph_adjacency_listing(n))
+# layout = 'prism'
 v = (0,0)
 
 # custom_nodes = [(0,0), (0,1), (0,2), (0,3), (0,4), (0,5),
