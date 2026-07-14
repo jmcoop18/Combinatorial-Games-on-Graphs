@@ -128,15 +128,15 @@ def complete_graph_adjacency_listing(n):
 
 
 # returns list of (part, index) vertex labels for the complete multipartite
-# graph K(m,...,m) with parts groups of m vertices each
-def complete_multipartite_graph_nodes(parts, m):
-    return [(p, i) for p in range(parts) for i in range(m)]
+# graph K(sizes[0], ..., sizes[-1]) where part p has sizes[p] vertices
+def complete_multipartite_graph_nodes(sizes):
+    return [(p, i) for p, size in enumerate(sizes) for i in range(size)]
 
 
-# returns adjacency listing for K(m,...,m): every pair of vertices in
+# returns adjacency listing for K(sizes...): every pair of vertices in
 # different parts is joined, no edges within a part
-def complete_multipartite_graph_adjacency_listing(parts, m):
-    nodes = complete_multipartite_graph_nodes(parts, m)
+def complete_multipartite_graph_adjacency_listing(sizes):
+    nodes = complete_multipartite_graph_nodes(sizes)
     return [(u, w) for a, u in enumerate(nodes) for w in nodes[a + 1:]
             if u[0] != w[0]]
 

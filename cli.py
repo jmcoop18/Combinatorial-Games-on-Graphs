@@ -45,7 +45,7 @@ def graph_type_menu():
     print('(6) - Rectangular Grid Graph')
     print('(7) - Complete Graph')
     print('(8) - Complete Split Graph')
-    print('(9) - Complete Multipartite Graph K(m,...,m)')
+    print('(9) - Complete K-partite Graph')
     print('(10) - Custom Adjacency Listing')
     print('(q) - Back')
     choice = input('Enter the option you would like (1-10, \'q\' to go back): ').strip().lower()
@@ -127,7 +127,7 @@ def nimber_menu():
     print(' ===== Run Type ===== ')
     print('(1) - Single run (fixed size, fixed starting vertex)')
     print('(2) - Iterate over all vertices (fixed size)')
-    if choice not in [8, 10]:
+    if choice not in [8, 9, 10]:
         print('(3) - Iterate over a range of sizes (fixed starting vertex)')
     if choice == 8:
         print('(3) - Iterate over ranges of m and n (fixed inner/outer starting vertex)')
@@ -144,12 +144,8 @@ def nimber_menu():
         adjacency_fn = lambda n: rect_grid_graph_adjacency_listing(rows, n)
         label = f'R{rows}x'
     elif choice == 9:
-        # multipartite graphs take two sizes: fix the number of parts here, so
-        # the single size parameter used below is the part size m
-        parts = int(input('How many parts (n)? '))
-        nodes_fn = lambda m: complete_multipartite_graph_nodes(parts, m)
-        adjacency_fn = lambda m: complete_multipartite_graph_adjacency_listing(parts, m)
-        label = f'K{parts}x'
+        # parts may have different sizes, entered as a comma-separated list
+        sizes = [int(t) for t in input('Part sizes (comma-separated, e.g. 2,3,5)? ').split(',')]
     elif choice == 8:
         if mode == 3:
             m_start = int(input('Starting complete graph size (m)? '))
@@ -167,10 +163,13 @@ def nimber_menu():
         label = f'K{m} + K'
 
     if choice in (1, 2, 3, 4, 5, 6, 7, 8, 9):
-        # prism, tri grid, rect grid, and multipartite vertices are
-        # (layer,index) pairs; the other families use int vertices
+        # prism, tri grid, and rect grid vertices are (layer,index) pairs;
+        # multipartite vertices of a part are all alike, so only the part
+        # number is asked for; the other families use int vertices
         def read_vertex(prompt):
-            if choice in (1, 5, 6, 9):
+            if choice == 9:
+                return (int(input(f'{prompt} (part number)? ')), 0)
+            if choice in (1, 5, 6):
                 r, c = (int(i) for i in input(f'{prompt} (layer,index)? ').split(','))
                 return (r, c)
             return int(input(f'{prompt}? '))
@@ -182,12 +181,17 @@ def nimber_menu():
             iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v)
             return
 
-        n = int(input(f'What size of graph? {label}'))
-        G = build_graph(nodes_fn(n), adjacency_fn(n))
+        if choice == 9:
+            G = build_graph(complete_multipartite_graph_nodes(sizes),
+                            complete_multipartite_graph_adjacency_listing(sizes))
+        else:
+            n = int(input(f'What size of graph? {label}'))
+            G = build_graph(nodes_fn(n), adjacency_fn(n))
 
         if mode == 2:
-            # in K(m,...,m) every vertex of a part is alike, so one per part suffices
-            iterate_all_vertices(G, [(p, 0) for p in range(parts)] if choice == 9 else None)
+            # in a complete multipartite graph every vertex of a part is
+            # alike, so one representative per part suffices
+            iterate_all_vertices(G, [(p, 0) for p in range(len(sizes))] if choice == 9 else None)
             return
 
         v = read_vertex('What is your starting vertex')
@@ -267,15 +271,18 @@ def even_kernel_menu():
     print(' ===== Run Type ===== ')
     print('(1) - Single run (fixed size, fixed starting vertex)')
     print('(2) - Iterate over all vertices (fixed size)')
-    if choice not in [8, 10]:
+    if choice not in [8, 9, 10]:
         print('(3) - Iterate over a range of sizes (fixed starting vertex)')
     mode = int(input('Enter the mode you would like: '))
     print()
 
-    # prism, tri grid, rect grid, and multipartite vertices are (layer,index)
-    # pairs; the rest are ints
+    # prism, tri grid, and rect grid vertices are (layer,index) pairs;
+    # multipartite vertices of a part are all alike, so only the part number
+    # is asked for; the rest are ints
     def read_vertex(prompt):
-        if choice in (1, 5, 6, 9):
+        if choice == 9:
+            return (int(input(f'{prompt} (part number)? ')), 0)
+        if choice in (1, 5, 6):
             r, c = (int(i) for i in input(f'{prompt} (layer,index)? ').split(','))
             return (r, c)
         return int(input(f'{prompt}? '))
@@ -291,12 +298,8 @@ def even_kernel_menu():
             adjacency_fn = lambda n: rect_grid_graph_adjacency_listing(rows, n)
             label = f'R{rows}x'
         else:
-            # multipartite graphs take two sizes: fix the number of parts here,
-            # so the single size parameter used below is the part size m
-            parts = int(input('How many parts (n)? '))
-            nodes_fn = lambda m: complete_multipartite_graph_nodes(parts, m)
-            adjacency_fn = lambda m: complete_multipartite_graph_adjacency_listing(parts, m)
-            label = f'K{parts}x'
+            # parts may have different sizes, entered as a comma-separated list
+            sizes = [int(t) for t in input('Part sizes (comma-separated, e.g. 2,3,5)? ').split(',')]
 
         if mode == 3:
             n_start = int(input(f'Starting size of {label} graph? '))
@@ -305,9 +308,14 @@ def even_kernel_menu():
             even_kernel_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v)
             return
 
-        n = int(input(f'What size of graph? {label}'))
-        G = build_graph(nodes_fn(n), adjacency_fn(n))
-        name = f'{label}{n}'
+        if choice == 9:
+            G = build_graph(complete_multipartite_graph_nodes(sizes),
+                            complete_multipartite_graph_adjacency_listing(sizes))
+            name = f'K({",".join(str(s) for s in sizes)})'
+        else:
+            n = int(input(f'What size of graph? {label}'))
+            G = build_graph(nodes_fn(n), adjacency_fn(n))
+            name = f'{label}{n}'
     elif choice == 8:
         m = int(input('Size of the complete graph (m)? '))
         n = int(input('Size of the independent set (n)? '))
@@ -321,8 +329,9 @@ def even_kernel_menu():
         return
 
     if mode == 2:
-        # in K(m,...,m) every vertex of a part is alike, so one per part suffices
-        even_kernel_all_vertices(G, [(p, 0) for p in range(parts)] if choice == 9 else None)
+        # in a complete multipartite graph every vertex of a part is alike,
+        # so one representative per part suffices
+        even_kernel_all_vertices(G, [(p, 0) for p in range(len(sizes))] if choice == 9 else None)
         return
 
     v = read_vertex('What is your chosen vertex')
