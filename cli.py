@@ -1,6 +1,10 @@
+import os
 import re
+import select
 import sys
+import termios
 import time
+import tty
 
 from graphs import (
     build_graph,
@@ -31,6 +35,48 @@ _current_run = []
 _replay_queue = None
 
 
+# input() replacement that reads the keyboard one keypress at a time so a
+# lone Esc press exits the program immediately, from any prompt; falls back
+# to plain input() when stdin isn't a terminal (e.g. piped input)
+def read_line(prompt=''):
+    if not sys.stdin.isatty():
+        return input(prompt)
+    print(prompt, end='', flush=True)
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    # bytes are read straight from the fd (not sys.stdin, which buffers
+    # ahead and would make the lone-Esc check below misfire on arrow keys)
+    buf = bytearray()
+    try:
+        tty.setcbreak(fd)  # keypress-at-a-time, but Ctrl+C still works
+        while True:
+            ch = os.read(fd, 1)
+            if ch == b'\x1b':  # Esc
+                # arrow keys etc. arrive as Esc followed by more bytes;
+                # only a lone Esc means the user wants to exit
+                if not select.select([fd], [], [], 0.05)[0]:
+                    print('\n\nGoodbye!')
+                    sys.exit(0)
+                # swallow the rest of the escape sequence and ignore it
+                while select.select([fd], [], [], 0.01)[0]:
+                    os.read(fd, 1)
+            elif ch in (b'\n', b'\r'):
+                print()
+                return buf.decode()
+            elif ch in (b'\x7f', b'\x08'):  # backspace
+                if buf:
+                    buf.pop()
+                    print('\b \b', end='', flush=True)
+            elif ch == b'\x04':  # Ctrl+D
+                raise EOFError
+            else:
+                buf += ch
+                sys.stdout.buffer.write(ch)
+                sys.stdout.flush()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+
 # input() replacement: records the answer, and during a replay silently
 # consumes the saved answer instead of prompting
 def ask(prompt):
@@ -38,7 +84,7 @@ def ask(prompt):
     if _replay_queue:
         answer = _replay_queue.pop(0)
     else:
-        answer = input(prompt)
+        answer = read_line(prompt)
     _current_run.append(answer)
     return answer
 
@@ -79,11 +125,11 @@ def graph_type_menu():
         print('(8) - Complete Split Graph')
         print('(9) - Complete K-partite Graph')
         print('(10) - Custom Adjacency Listing')
-        print('(q) - Back')
-    choice = ask('Enter the option you would like (1-10, \'q\' to go back): ').strip().lower()
+        print('(b) - Back')
+    choice = ask('Enter the option you would like (1-10, \'b\' to go back): ').strip().lower()
     if not _replay_queue:
         print()
-    if choice == 'q':
+    if choice == 'b':
         return None
     return int(choice)
 
@@ -406,14 +452,11 @@ def rerun_last():
 def menu():
     global _current_run, _replay_queue
     print(' ===== Algorithms ===== ')
+    print('(Press Esc at any time to exit)')
     print('(1) - Nimbers for AAC')
     print('(2) - Even Kernels')
-    print('(q) - Quit')
-    choice = input('Enter the option you would like (1-2, \'q\' to quit): ').strip().lower()
+    choice = read_line('Enter the option you would like (1-2): ').strip().lower()
     print()
-
-    if choice == 'q':
-        return False
 
     _current_run = [choice]
     _replay_queue = None
@@ -425,7 +468,7 @@ if __name__ == '__main__':
     keep_going = menu()
     while keep_going:
         hint = ' (or space + Enter to rerun the last graph & run type)' if _last_run else ''
-        again = input(f'\nPress Enter to continue{hint}...')
+        again = read_line(f'\nPress Enter to continue{hint}...')
         print()
         # a line of only whitespace (space then Enter) means rerun;
         # a bare Enter or anything else goes back to the menu
