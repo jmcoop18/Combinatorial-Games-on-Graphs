@@ -18,7 +18,7 @@ from graphs import (
     complete_graph_nodes, complete_graph_adjacency_listing,
     complete_multipartite_graph_nodes, complete_multipartite_graph_adjacency_listing,
 )
-from nimber import find_nimber, nimber_output
+from nimber import AAC_nimber, nimber_output
 from gf2_even_kernel import all_even_kernels, has_zero_or_two_neighbors
 
 
@@ -145,26 +145,26 @@ def read_custom_graph():
     return build_graph(n, listing)
 
 
-# runs find_nimber on G from vertex v and prints the result
+# runs AAC_nimber on G from vertex v and prints the result
 def run_single(G, v):
     print()
     start = time.time()
-    nimber = nimber_output(find_nimber(G, v))
+    nimber = nimber_output(AAC_nimber(G, v))
     print(f'Nimber from vertex {v} = {nimber}')
     print("Runtime:", time.time() - start, "seconds")
 
 
-# runs find_nimber once per vertex, printing the nimber for each; vertices
+# runs AAC_nimber once per vertex, printing the nimber for each; vertices
 # defaults to all of G, but symmetric families can pass representatives only
 def iterate_all_vertices(G, vertices=None):
     print()
     for v in vertices if vertices is not None else G.nodes():
         start = time.time()
-        nimber = nimber_output(find_nimber(G, v))
+        nimber = nimber_output(AAC_nimber(G, v))
         print(f'v{v}: nimber {nimber}.  ({time.time() - start:.3f}s)')
 
 
-# runs find_nimber from a fixed starting vertex v, once per size n in [n_start, n_end],
+# runs AAC_nimber from a fixed starting vertex v, once per size n in [n_start, n_end],
 # building each graph via nodes_fn(n)/adjacency_fn(n); sizes where v isn't a vertex are skipped
 def iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v):
     print()
@@ -174,11 +174,11 @@ def iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v):
             print(f'{label}{n}: vertex {v} not in graph, skipping.')
             continue
         start = time.time()
-        nimber = nimber_output(find_nimber(G, v))
+        nimber = nimber_output(AAC_nimber(G, v))
         print(f'{label}{n}: nimber {nimber} from {v}.  ({time.time() - start:.3f}s)')
 
 
-# runs find_nimber on complete split graphs CS(m, n) for every m in [m_start, m_end]
+# runs AAC_nimber on complete split graphs CS(m, n) for every m in [m_start, m_end]
 # and n in [n_start, n_end], starting from an inner (clique) vertex or an outer
 # (independent set) vertex; inner vertices are all alike, so vertex 0 stands in
 # for any of them, and likewise vertex m for the outer ones
@@ -193,7 +193,7 @@ def iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner):
             G = build_graph(complete_split_graph_nodes(m, n), complete_split_graph_adjacency_listing(m, n))
             v = 0 if inner else m
             start = time.time()
-            nimber = nimber_output(find_nimber(G, v))
+            nimber = nimber_output(AAC_nimber(G, v))
             print(f'K{m} + K{n}: nimber {nimber} from {kind} vertex {v}.  ({time.time() - start:.3f}s)')
         print()
 
