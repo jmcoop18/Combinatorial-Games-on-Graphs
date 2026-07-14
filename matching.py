@@ -11,7 +11,8 @@ import networkx as nx
 # INPUT:  Graph G, initial matching M on G
 # OUTPUT: maximum matching M* on G
 def find_maximum_matching(G, M):
-    P = find_augmenting_path(G, M) 
+    # P = find_augmenting_path(G, M) # my algorithm
+    P = find_augmenting_path_micali_vazirani(G, M)
 
     if P == []:  # Base case
         return M
