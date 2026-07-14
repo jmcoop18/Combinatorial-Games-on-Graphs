@@ -23,6 +23,36 @@ from gf2_even_kernel import all_even_kernels, has_zero_or_two_neighbors
 # menu-driven graph selection shared by both
 # ============================================================================
 
+# every answer typed during a run is recorded so the main menu's 'r' option
+# can replay the whole selection; _replay_queue holds the answers being
+# replayed (None when reading from the keyboard as usual)
+_last_run = []
+_current_run = []
+_replay_queue = None
+
+
+# input() replacement: records the answer, and during a replay silently
+# consumes the saved answer instead of prompting
+def ask(prompt):
+    global _replay_queue
+    if _replay_queue:
+        answer = _replay_queue.pop(0)
+    else:
+        answer = input(prompt)
+    _current_run.append(answer)
+    return answer
+
+
+# sys.stdin.read() replacement (custom adjacency listings), recorded the same way
+def ask_multiline():
+    global _replay_queue
+    if _replay_queue:
+        raw = _replay_queue.pop(0)
+    else:
+        raw = sys.stdin.read()
+    _current_run.append(raw)
+    return raw
+
 # single-size graph families: choice -> (nodes_fn, adjacency_fn, label)
 GRAPH_TYPES = {
     1: (prism_graph_nodes, prism_graph_adjacency_listing, 'D'),
@@ -34,22 +64,25 @@ GRAPH_TYPES = {
 }
 
 
-# prints the graph type menu; returns the chosen option as an int, or None on 'q'
+# prints the graph type menu (skipped during a rerun); returns the chosen
+# option as an int, or None on 'q'
 def graph_type_menu():
-    print(' ===== Graph Types ===== ')
-    print('(1) - Prism Graph')
-    print('(2) - Cycle Graph')
-    print('(3) - Wheel Graph')
-    print('(4) - Path Graph')
-    print('(5) - Triangular Grid Graph')
-    print('(6) - Rectangular Grid Graph')
-    print('(7) - Complete Graph')
-    print('(8) - Complete Split Graph')
-    print('(9) - Complete K-partite Graph')
-    print('(10) - Custom Adjacency Listing')
-    print('(q) - Back')
-    choice = input('Enter the option you would like (1-10, \'q\' to go back): ').strip().lower()
-    print()
+    if not _replay_queue:
+        print(' ===== Graph Types ===== ')
+        print('(1) - Prism Graph')
+        print('(2) - Cycle Graph')
+        print('(3) - Wheel Graph')
+        print('(4) - Path Graph')
+        print('(5) - Triangular Grid Graph')
+        print('(6) - Rectangular Grid Graph')
+        print('(7) - Complete Graph')
+        print('(8) - Complete Split Graph')
+        print('(9) - Complete K-partite Graph')
+        print('(10) - Custom Adjacency Listing')
+        print('(q) - Back')
+    choice = ask('Enter the option you would like (1-10, \'q\' to go back): ').strip().lower()
+    if not _replay_queue:
+        print()
     if choice == 'q':
         return None
     return int(choice)
@@ -57,10 +90,10 @@ def graph_type_menu():
 
 # reads a custom graph from stdin as "i,j" edge pairs
 def read_custom_graph():
-    n = int(input('How many vertices are in your graph? '))
+    n = int(ask('How many vertices are in your graph? '))
     print('Type or paste your adjacency listing as "i,j" pairs, separated by newlines.')
     print('When finished, press Enter then Ctrl+D (Ctrl+Z then Enter on Windows):')
-    raw = sys.stdin.read()
+    raw = ask_multiline()
     pairs = re.split(r'[;\s]+', raw.strip())
     listing = [tuple(int(x) for x in pair.split(',')) for pair in pairs if pair]
     return build_graph(n, listing)
@@ -124,14 +157,15 @@ def nimber_menu():
     if choice is None:
         return
 
-    print(' ===== Run Type ===== ')
-    print('(1) - Single run (fixed size, fixed starting vertex)')
-    print('(2) - Iterate over all vertices (fixed size)')
-    if choice not in [8, 9, 10]:
-        print('(3) - Iterate over a range of sizes (fixed starting vertex)')
-    if choice == 8:
-        print('(3) - Iterate over ranges of m and n (fixed inner/outer starting vertex)')
-    mode = int(input('Enter the mode you would like: '))
+    if not _replay_queue:
+        print(' ===== Run Type ===== ')
+        print('(1) - Single run (fixed size, fixed starting vertex)')
+        print('(2) - Iterate over all vertices (fixed size)')
+        if choice not in [8, 9, 10]:
+            print('(3) - Iterate over a range of sizes (fixed starting vertex)')
+        if choice == 8:
+            print('(3) - Iterate over ranges of m and n (fixed inner/outer starting vertex)')
+    mode = int(ask('Enter the mode you would like: '))
     print()
 
     if choice in GRAPH_TYPES:
@@ -139,25 +173,25 @@ def nimber_menu():
     elif choice == 6:
         # rectangular grids take two sizes: fix the row count here, so the
         # single size parameter used below is the number of columns
-        rows = int(input('Number of rows (m)? '))
+        rows = int(ask('Number of rows (m)? '))
         nodes_fn = lambda n: rect_grid_graph_nodes(rows, n)
         adjacency_fn = lambda n: rect_grid_graph_adjacency_listing(rows, n)
         label = f'R{rows}x'
     elif choice == 9:
         # parts may have different sizes, entered as a comma-separated list
-        sizes = [int(t) for t in input('Part sizes (comma-separated, e.g. 2,3,5)? ').split(',')]
+        sizes = [int(t) for t in ask('Part sizes (comma-separated, e.g. 2,3,5)? ').split(',')]
     elif choice == 8:
         if mode == 3:
-            m_start = int(input('Starting complete graph size (m)? '))
-            m_end = int(input('Ending complete graph size m (inclusive)? '))
-            n_start = int(input('Starting independent node size n? '))
-            n_end = int(input('Ending independent node size n (inclusive)? '))
-            inner = input('Enter \'i\' to start from an inner vertex and \'o\' for an outer? ').strip().lower().startswith('i')
+            m_start = int(ask('Starting complete graph size (m)? '))
+            m_end = int(ask('Ending complete graph size m (inclusive)? '))
+            n_start = int(ask('Starting independent node size n? '))
+            n_end = int(ask('Ending independent node size n (inclusive)? '))
+            inner = ask('Enter \'i\' to start from an inner vertex and \'o\' for an outer? ').strip().lower().startswith('i')
             iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner)
             return
         # complete split graphs take two sizes: fix the complete graph size m here, so
         # the single size parameter used below is the independent set size n
-        m = int(input('Size of the complete graph (m)? '))
+        m = int(ask('Size of the complete graph (m)? '))
         nodes_fn = lambda n: complete_split_graph_nodes(m, n)
         adjacency_fn = lambda n: complete_split_graph_adjacency_listing(m, n)
         label = f'K{m} + K'
@@ -168,15 +202,15 @@ def nimber_menu():
         # number is asked for; the other families use int vertices
         def read_vertex(prompt):
             if choice == 9:
-                return (int(input(f'{prompt} (part number)? ')), 0)
+                return (int(ask(f'{prompt} (part number)? ')), 0)
             if choice in (1, 5, 6):
-                r, c = (int(i) for i in input(f'{prompt} (layer,index)? ').split(','))
+                r, c = (int(i) for i in ask(f'{prompt} (layer,index)? ').split(','))
                 return (r, c)
-            return int(input(f'{prompt}? '))
+            return int(ask(f'{prompt}? '))
 
         if mode == 3:
-            n_start = int(input(f'Starting size of {label} graph? '))
-            n_end = int(input(f'Ending size of {label} graph (inclusive)? '))
+            n_start = int(ask(f'Starting size of {label} graph? '))
+            n_end = int(ask(f'Ending size of {label} graph (inclusive)? '))
             v = read_vertex('What is your fixed starting vertex')
             iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v)
             return
@@ -185,7 +219,7 @@ def nimber_menu():
             G = build_graph(complete_multipartite_graph_nodes(sizes),
                             complete_multipartite_graph_adjacency_listing(sizes))
         else:
-            n = int(input(f'What size of graph? {label}'))
+            n = int(ask(f'What size of graph? {label}'))
             G = build_graph(nodes_fn(n), adjacency_fn(n))
 
         if mode == 2:
@@ -204,7 +238,7 @@ def nimber_menu():
             iterate_all_vertices(G)
             return
 
-        v = int(input('What is your starting vertex? '))
+        v = int(ask('What is your starting vertex? '))
         run_single(G, v)
 
 
@@ -268,12 +302,13 @@ def even_kernel_menu():
     if choice is None:
         return
 
-    print(' ===== Run Type ===== ')
-    print('(1) - Single run (fixed size, fixed starting vertex)')
-    print('(2) - Iterate over all vertices (fixed size)')
-    if choice not in [8, 9, 10]:
-        print('(3) - Iterate over a range of sizes (fixed starting vertex)')
-    mode = int(input('Enter the mode you would like: '))
+    if not _replay_queue:
+        print(' ===== Run Type ===== ')
+        print('(1) - Single run (fixed size, fixed starting vertex)')
+        print('(2) - Iterate over all vertices (fixed size)')
+        if choice not in [8, 9, 10]:
+            print('(3) - Iterate over a range of sizes (fixed starting vertex)')
+    mode = int(ask('Enter the mode you would like: '))
     print()
 
     # prism, tri grid, and rect grid vertices are (layer,index) pairs;
@@ -281,11 +316,11 @@ def even_kernel_menu():
     # is asked for; the rest are ints
     def read_vertex(prompt):
         if choice == 9:
-            return (int(input(f'{prompt} (part number)? ')), 0)
+            return (int(ask(f'{prompt} (part number)? ')), 0)
         if choice in (1, 5, 6):
-            r, c = (int(i) for i in input(f'{prompt} (layer,index)? ').split(','))
+            r, c = (int(i) for i in ask(f'{prompt} (layer,index)? ').split(','))
             return (r, c)
-        return int(input(f'{prompt}? '))
+        return int(ask(f'{prompt}? '))
 
     if choice in GRAPH_TYPES or choice in (6, 9):
         if choice in GRAPH_TYPES:
@@ -293,17 +328,17 @@ def even_kernel_menu():
         elif choice == 6:
             # rectangular grids take two sizes: fix the row count here, so the
             # single size parameter used below is the number of columns
-            rows = int(input('Number of rows (m)? '))
+            rows = int(ask('Number of rows (m)? '))
             nodes_fn = lambda n: rect_grid_graph_nodes(rows, n)
             adjacency_fn = lambda n: rect_grid_graph_adjacency_listing(rows, n)
             label = f'R{rows}x'
         else:
             # parts may have different sizes, entered as a comma-separated list
-            sizes = [int(t) for t in input('Part sizes (comma-separated, e.g. 2,3,5)? ').split(',')]
+            sizes = [int(t) for t in ask('Part sizes (comma-separated, e.g. 2,3,5)? ').split(',')]
 
         if mode == 3:
-            n_start = int(input(f'Starting size of {label} graph? '))
-            n_end = int(input(f'Ending size of {label} graph (inclusive)? '))
+            n_start = int(ask(f'Starting size of {label} graph? '))
+            n_end = int(ask(f'Ending size of {label} graph (inclusive)? '))
             v = read_vertex('What is your fixed starting vertex')
             even_kernel_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v)
             return
@@ -313,12 +348,12 @@ def even_kernel_menu():
                             complete_multipartite_graph_adjacency_listing(sizes))
             name = f'K({",".join(str(s) for s in sizes)})'
         else:
-            n = int(input(f'What size of graph? {label}'))
+            n = int(ask(f'What size of graph? {label}'))
             G = build_graph(nodes_fn(n), adjacency_fn(n))
             name = f'{label}{n}'
     elif choice == 8:
-        m = int(input('Size of the complete graph (m)? '))
-        n = int(input('Size of the independent set (n)? '))
+        m = int(ask('Size of the complete graph (m)? '))
+        n = int(ask('Size of the independent set (n)? '))
         G = build_graph(complete_split_graph_nodes(m, n), complete_split_graph_adjacency_listing(m, n))
         name = f'K{m} + K{n}'
     elif choice == 10:
@@ -341,7 +376,35 @@ def even_kernel_menu():
     even_kernel_single(G, v, name)
 
 
+# runs the chosen algorithm, then saves the recorded answers for replay
+def run_choice(choice):
+    global _last_run, _replay_queue
+    if choice == '1':
+        nimber_menu()
+    elif choice == '2':
+        even_kernel_menu()
+    else:
+        print('Unknown option.')
+        return
+    # a bare 'q' means the run was backed out of at the graph type menu;
+    # keep the previous completed selection in that case
+    if 'q' not in _current_run:
+        _last_run = _current_run
+    _replay_queue = None
+
+
+# replays the algorithm, graph type, and run type of the last completed
+# selection (its first three recorded answers), then picks the menu back up
+# there, prompting for sizes and vertices as usual
+def rerun_last():
+    global _current_run, _replay_queue
+    _replay_queue = list(_last_run[:3])
+    _current_run = [_replay_queue.pop(0)]
+    run_choice(_current_run[0])
+
+
 def menu():
+    global _current_run, _replay_queue
     print(' ===== Algorithms ===== ')
     print('(1) - Nimbers for AAC')
     print('(2) - Even Kernels')
@@ -351,16 +414,22 @@ def menu():
 
     if choice == 'q':
         return False
-    if choice == '1':
-        nimber_menu()
-    elif choice == '2':
-        even_kernel_menu()
-    else:
-        print('Unknown option.')
+
+    _current_run = [choice]
+    _replay_queue = None
+    run_choice(choice)
     return True
 
 
 if __name__ == '__main__':
-    while menu():
-        input('\nPress Enter to continue...')
+    keep_going = menu()
+    while keep_going:
+        hint = ' (or space + Enter to rerun the last graph & run type)' if _last_run else ''
+        again = input(f'\nPress Enter to continue{hint}...')
         print()
+        # a line of only whitespace (space then Enter) means rerun;
+        # a bare Enter or anything else goes back to the menu
+        if again and not again.strip() and _last_run:
+            rerun_last()
+        else:
+            keep_going = menu()
