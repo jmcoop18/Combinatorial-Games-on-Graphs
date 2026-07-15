@@ -28,6 +28,26 @@ def nimber_output(n):
     elif n == 0:
         return 0
 
+# returns the nimber for AAC on a graph G from a starting vertex v
+def recursive_AAC_nimber(G, v):
+    M = nx.Graph()
+    _, winner = AAC_winner(G, M, v)
+
+    #if player 2 wins from this position, game nimber = 0
+    if winner == 'P2':
+        return 0
+    
+    # find and save all verticies connected to v
+    new_vertices = list(G.neighbors(v))
+
+    # make a copy of the game and remove v
+    new_G = G.copy()
+    new_G.remove_node(v)
+
+    # recurse and save the nimbers for the layer below the node
+    child_nimbers = [AAC_nimber(new_G, node) for node in new_vertices]
+    return mex(child_nimbers)
+
 
 # returns the nimber for AAC on a graph G from a starting vertex v
 def AAC_nimber(G, v, memo=None, msize=None):
