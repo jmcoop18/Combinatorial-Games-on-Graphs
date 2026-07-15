@@ -45,7 +45,7 @@ def recursive_AAC_nimber(G, v):
     new_G.remove_node(v)
 
     # recurse and save the nimbers for the layer below the node
-    child_nimbers = [AAC_nimber(new_G, node) for node in new_vertices]
+    child_nimbers = [recursive_AAC_nimber(new_G, node) for node in new_vertices]
     return mex(child_nimbers)
 
 
@@ -100,7 +100,7 @@ def nx_AAC_nimber(G, v, memo=None, msize=None):
     if matching_size(G) == matching_size(H):   # P2 wins -> nimber 0, prune subtree
         memo[key] = 0
     else:
-        memo[key] = mex(AAC_nimber(H, u, memo, msize) for u in G.neighbors(v))
+        memo[key] = mex(nx_AAC_nimber(H, u, memo, msize) for u in G.neighbors(v))
     return memo[key]
 
 
