@@ -82,7 +82,7 @@ def _kpartite_AAC_nimber(others, own):
     if multipartite_matching_size(counts) == multipartite_matching_size(after):
         return 0  # P2 wins, prune subtree
 
-    # next vertex must be adjacent to the current one, i.e. in a different part
+    # next vertex must be in a different part
     rest = list(others)
     child_nimbers = []
     seen = set()
