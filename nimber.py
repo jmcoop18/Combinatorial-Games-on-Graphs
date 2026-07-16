@@ -1,10 +1,13 @@
+import hashlib
+from functools import lru_cache
+
 import networkx as nx
 
 from matching import AAC_winner
 
 
 # ============================================================================
-# Functions to find Nimbers
+# Nimber Helper Functions
 # ============================================================================
 
 # returns the mex (minimum excluded value) of the list input
@@ -28,54 +31,10 @@ def nimber_output(n):
     elif n == 0:
         return 0
 
-# returns the nimber for AAC on a graph G from a starting vertex v
-def recursive_AAC_nimber(G, v):
-    M = nx.Graph()
-    _, winner = AAC_winner(G, M, v)
-
-    #if player 2 wins from this position, game nimber = 0
-    if winner == 'P2':
-        return 0
     
-    # find and save all verticies connected to v
-    new_vertices = list(G.neighbors(v))
-
-    # make a copy of the game and remove v
-    new_G = G.copy()
-    new_G.remove_node(v)
-
-    # recurse and save the nimbers for the layer below the node
-    child_nimbers = [recursive_AAC_nimber(new_G, node) for node in new_vertices]
-    return mex(child_nimbers)
-
-
-# returns the nimber for AAC on a graph G from a starting vertex v
-def AAC_nimber(G, v, memo=None, msize=None):
-    if memo is None: # create empty caches if top level call
-        memo = {} # cache for previously calculated nimbers
-        msize = {} # cache for previously calculated matchings
-    
-    G = G.subgraph(nx.node_connected_component(G, v))
-    key = (frozenset(G.nodes), v)
-    if key in memo: # if the nimber has already been calculated return it
-        return memo[key]
-    
-    # make a copy of the game and remove v
-    new_G = G.copy()
-    new_G.remove_node(v)
-    
-    # calculate nimber
-    M = nx.Graph()
-    _, winner = AAC_winner(G, M, v)
-
-    if winner == 'P2':
-        memo[key] = 0
-    else:
-        memo[key] = mex(AAC_nimber(new_G, n, memo, msize) for n in G.neighbors(v))
-    return memo[key]
-
-
-
+# ============================================================================
+# Functions to find Nimbers For AAC
+# ============================================================================
 
 def nx_AAC_nimber(G, v, memo=None, msize=None):
     if memo is None: # create empty caches if top level call
@@ -104,6 +63,53 @@ def nx_AAC_nimber(G, v, memo=None, msize=None):
     return memo[key]
 
 
+
+# Closed-form solver for complete multipartite graphs K(sizes)
+# max matching size of a complete multipartite graph with the given part counts
+def multipartite_matching_size(counts):
+    N = sum(counts)
+    if N == 0:
+        return 0
+    return min(N // 2, N - max(counts))
+
+
+# nimber of the position where the current vertex sits in a part with `own`
+# vertices remaining (including itself); `others` = sorted sizes of other parts
+@lru_cache(maxsize=None)
+def _kpartite_AAC_nimber(others, own):
+    counts = others + (own,)
+    after = others + (own - 1,)
+    if multipartite_matching_size(counts) == multipartite_matching_size(after):
+        return 0  # P2 wins, prune subtree
+
+    # next vertex must be adjacent to the current one, i.e. in a different part
+    rest = list(others)
+    child_nimbers = []
+    seen = set()
+    for part, vertex in enumerate(rest):
+        if vertex == 0:
+            continue  # no vertex left in this part to move to
+        new_others = tuple(sorted(rest[:part] + rest[part + 1:] + [own - 1]))
+        key = (new_others, vertex)
+        if key in seen:
+            continue  # same position up to part relabeling
+        seen.add(key)
+        child_nimbers.append(_kpartite_AAC_nimber(new_others, vertex))
+    return mex(child_nimbers)
+
+
+# returns the nimber for AAC on K(sizes) starting from any vertex in part p
+# e.g. multipartite_AAC_nimber([1, 2, 3, 4, 5, 6, 22], 6) -> start in the 22-part
+def multipartite_AAC_nimber(sizes, p):
+    others = tuple(sorted(list(sizes[:p]) + list(sizes[p + 1:])))
+    return _kpartite_AAC_nimber(others, sizes[p])
+
+
+
+# ============================================================================
+# Functions to find Nimbers For MAC
+# ============================================================================
+
 def MAC_nimber(G,v):
     # if one node left, then p2 win and nimber = 0
     if len(G) == 1:
@@ -117,9 +123,4 @@ def MAC_nimber(G,v):
 
 
 if __name__ == "__main__":
-    from graphs import prism_graph_adjacency_listing, prism_graph_nodes, build_graph
-    
-    n = 3
-    G = build_graph(prism_graph_nodes(n), prism_graph_adjacency_listing(n))
-    v= (0,0)
-    print(MAC_nimber(G, v))
+    pass

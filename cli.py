@@ -18,7 +18,7 @@ from graphs import (
     complete_graph_nodes, complete_graph_adjacency_listing,
     complete_multipartite_graph_nodes, complete_multipartite_graph_adjacency_listing,
 )
-from nimber import recursive_AAC_nimber, AAC_nimber, nx_AAC_nimber, nimber_output
+from nimber import nx_AAC_nimber, nimber_output, multipartite_AAC_nimber
 from gf2_even_kernel import all_even_kernels, has_zero_or_two_neighbors
 
 
@@ -154,6 +154,25 @@ def run_single(G, v):
     print("Runtime:", time.time() - start, "seconds")
 
 
+# runs the closed-form multipartite solver on K(sizes) from a vertex in part p
+def run_single_multipartite(sizes, p):
+    print()
+    start = time.time()
+    nimber = nimber_output(multipartite_AAC_nimber(sizes, p))
+    print(f'Nimber from part {p} = {nimber}')
+    print("Runtime:", time.time() - start, "seconds")
+
+
+# runs the closed-form multipartite solver once per part of K(sizes);
+# vertices of a part are all alike, so one representative per part suffices
+def iterate_all_parts(sizes):
+    print()
+    for p in range(len(sizes)):
+        start = time.time()
+        nimber = nimber_output(multipartite_AAC_nimber(sizes, p))
+        print(f'part {p} (size {sizes[p]}): nimber {nimber}.  ({time.time() - start:.3f}s)')
+
+
 # runs nx_AAC_nimber once per vertex, printing the nimber for each; vertices
 # defaults to all of G, but symmetric families can pass representatives only
 def iterate_all_vertices(G, vertices=None):
@@ -193,7 +212,7 @@ def iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner):
             G = build_graph(complete_split_graph_nodes(m, n), complete_split_graph_adjacency_listing(m, n))
             v = 0 if inner else m
             start = time.time()
-            nimber = nimber_output(AAC_nimber(G, v))
+            nimber = nimber_output(nx_AAC_nimber(G, v))
             print(f'K{m} + K{n}: nimber {nimber} from {kind} vertex {v}.  ({time.time() - start:.3f}s)')
         print()
 
@@ -242,13 +261,19 @@ def nimber_menu():
         adjacency_fn = lambda n: complete_split_graph_adjacency_listing(m, n)
         label = f'K{m} + K'
 
-    if choice in (1, 2, 3, 4, 5, 6, 7, 8, 9):
+    if choice == 9:
+        # the closed-form solver works on the part sizes directly, so no
+        # graph is ever built for complete multipartite nimbers
+        if mode == 2:
+            iterate_all_parts(sizes)
+            return
+        p = int(ask('What is your starting vertex (part number)? '))
+        run_single_multipartite(sizes, p)
+
+    elif choice in (1, 2, 3, 4, 5, 6, 7, 8):
         # prism, tri grid, and rect grid vertices are (layer,index) pairs;
-        # multipartite vertices of a part are all alike, so only the part
-        # number is asked for; the other families use int vertices
+        # the other families use int vertices
         def read_vertex(prompt):
-            if choice == 9:
-                return (int(ask(f'{prompt} (part number)? ')), 0)
             if choice in (1, 5, 6):
                 r, c = (int(i) for i in ask(f'{prompt} (layer,index)? ').split(','))
                 return (r, c)
@@ -261,17 +286,11 @@ def nimber_menu():
             iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v)
             return
 
-        if choice == 9:
-            G = build_graph(complete_multipartite_graph_nodes(sizes),
-                            complete_multipartite_graph_adjacency_listing(sizes))
-        else:
-            n = int(ask(f'What size of graph? {label}'))
-            G = build_graph(nodes_fn(n), adjacency_fn(n))
+        n = int(ask(f'What size of graph? {label}'))
+        G = build_graph(nodes_fn(n), adjacency_fn(n))
 
         if mode == 2:
-            # in a complete multipartite graph every vertex of a part is
-            # alike, so one representative per part suffices
-            iterate_all_vertices(G, [(p, 0) for p in range(len(sizes))] if choice == 9 else None)
+            iterate_all_vertices(G)
             return
 
         v = read_vertex('What is your starting vertex')
