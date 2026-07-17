@@ -1,3 +1,4 @@
+import itertools
 import os
 import re
 import select
@@ -18,7 +19,7 @@ from graphs import (
     complete_graph_nodes, complete_graph_adjacency_listing,
     complete_multipartite_graph_nodes, complete_multipartite_graph_adjacency_listing,
 )
-from nimber import nx_AAC_nimber, nimber_output, multipartite_AAC_nimber
+from nimber import nx_AAC_nimber, nimber_output, multipartite_AAC_nimber, blossomX_AAC_nimber
 from gf2_even_kernel import all_even_kernels, has_zero_or_two_neighbors
 
 
@@ -193,7 +194,7 @@ def iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v):
             print(f'{label}{n}: vertex {v} not in graph, skipping.')
             continue
         start = time.time()
-        nimber = nimber_output(nx_AAC_nimber(G, v))
+        nimber = nimber_output(blossomX_AAC_nimber(G, v))
         print(f'{label}{n}: nimber {nimber} from {v}.  ({time.time() - start:.3f}s)')
 
 
@@ -483,7 +484,31 @@ def menu():
     return True
 
 
+# testing sweep: k-partite K(a1,...,a_{k-1},d) over all nondecreasing small
+# part sizes a1 <= ... <= a_{k-1} <= c_max with dominant part
+# d = a1 + ... + a_{k-1} + 1, printing the nimber from every part of each graph;
+# run with `python cli.py sweep <k>` (k defaults to 4; plain `python cli.py`
+# still opens the menu)
+def sweep_kpartite(k=4, c_max=10):
+    # compute every row first so the columns can be sized to the widest entries
+    rows = []
+    for small in itertools.combinations_with_replacement(range(1, c_max + 1), k - 1):
+        d = sum(small) + 1
+        sizes = list(small) + [d]
+        label = f'K({",".join(str(s) for s in sizes)}):'
+        nimbers = [str(nimber_output(multipartite_AAC_nimber(sizes, p))) for p in range(k)]
+        rows.append((label, nimbers))
+    label_width = max(len(label) for label, _ in rows)
+    nimber_width = max(len(n) for _, nimbers in rows for n in nimbers)
+    for label, nimbers in rows:
+        print((label.ljust(label_width + 2) + '  '.join(n.ljust(nimber_width) for n in nimbers)).rstrip())
+
+
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] in ('sweep', 'sweep4'):
+        k = int(sys.argv[2]) if len(sys.argv) > 2 else 4
+        sweep_kpartite(k)
+        sys.exit(0)
     keep_going = menu()
     while keep_going:
         hint = ' (or space + Enter to rerun the last graph & run type)' if _last_run else ''
