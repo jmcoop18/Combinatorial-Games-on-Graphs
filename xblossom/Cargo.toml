@@ -1,0 +1,18 @@
+[package]
+name = "xblossom"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "xblossom"
+# cdylib -> importable Python extension module; rlib -> usable by `cargo test`
+crate-type = ["cdylib", "rlib"]
+
+# extension-module is enabled only by maturin (see pyproject.toml) so that
+# plain `cargo test` can still link against libpython
+[dependencies]
+pyo3 = { version = "0.24", features = ["abi3-py39"] }
+
+[profile.release]
+lto = true
+codegen-units = 1

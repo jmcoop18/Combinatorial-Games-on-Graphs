@@ -1,0 +1,8 @@
+/Users/jakecooper/Documents/Marian Classes/Summer Scholars/Summer Scholars Code/xblossom/target/release/build/target-lexicon-e9e322cf42055997/build_script_build-e9e322cf42055997.d: /Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/build.rs /Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/src/data_model.rs /Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/src/triple.rs /Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/src/targets.rs
+
+/Users/jakecooper/Documents/Marian Classes/Summer Scholars/Summer Scholars Code/xblossom/target/release/build/target-lexicon-e9e322cf42055997/build_script_build-e9e322cf42055997: /Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/build.rs /Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/src/data_model.rs /Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/src/triple.rs /Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/src/targets.rs
+
+/Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/build.rs:
+/Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/src/data_model.rs:
+/Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/src/triple.rs:
+/Users/jakecooper/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/target-lexicon-0.13.5/src/targets.rs:

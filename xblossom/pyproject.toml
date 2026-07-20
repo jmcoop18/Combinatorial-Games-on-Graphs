@@ -1,0 +1,12 @@
+[build-system]
+requires = ["maturin>=1.5"]
+build-backend = "maturin"
+
+[project]
+name = "xblossom"
+version = "0.1.0"
+description = "Maximum matching via Edmonds' blossom algorithm (Rust core, X-Blossom-style CSR interface)"
+requires-python = ">=3.9"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]

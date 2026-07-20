@@ -4,6 +4,7 @@ from functools import lru_cache
 import networkx as nx
 
 from matching import AAC_winner
+from rust_matching import matching_size as rust_matching_size
 
 
 # ============================================================================
@@ -60,6 +61,36 @@ def nx_AAC_nimber(G, v, memo=None, msize=None):
         memo[key] = 0
     else:
         memo[key] = mex(nx_AAC_nimber(H, u, memo, msize) for u in G.neighbors(v))
+    return memo[key]
+
+
+
+# same as nx_AAC_nimber but matchings are computed by the Rust blossom
+# extension (xblossom); falls back to networkx if the extension isn't built
+def blossomX_AAC_nimber(G, v, memo=None, msize=None):
+    if memo is None: # create empty caches if top level call
+        memo = {} # cache for previously calculated nimbers
+        msize = {} # cache for previously calculated matchings
+
+    G = G.subgraph(nx.node_connected_component(G, v))
+    key = (frozenset(G.nodes), v)
+    if key in memo: # if the nimber has already been calculated return it
+        return memo[key]
+
+    # returns the size of a maximum matching
+    def matching_size(H):
+        m = frozenset(H.nodes)
+        if m not in msize: # add matching to the cache if it's a new calculation
+            msize[m] = rust_matching_size(H)
+        return msize[m]
+
+    H = G.copy()
+    H.remove_node(v)
+
+    if matching_size(G) == matching_size(H):   # P2 wins -> nimber 0, prune subtree
+        memo[key] = 0
+    else:
+        memo[key] = mex(blossomX_AAC_nimber(H, u, memo, msize) for u in G.neighbors(v))
     return memo[key]
 
 
