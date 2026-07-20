@@ -141,15 +141,27 @@ def multipartite_AAC_nimber(sizes, p):
 # Functions to find Nimbers For MAC
 # ============================================================================
 
-def MAC_nimber(G,v):
+def MAC_nimber(G,v, seen=None):
+    if seen is None:
+        seen = {}
+        
     # if one node left, then p2 win and nimber = 0
     if len(G) == 1:
         return 0
     
     neighbors = list(G.neighbors(v))
     
-    child_nimbers = [MAC_nimber(G.remove_edge(v, n), n) for n in neighbors]
+    if any(vertex in seen for vertex in neighbors):
+        return 0
+    
+    child_nimbers = []
+    for n in neighbors:
+        H = G.copy()
+        H.remove_edge(v, n)
+        child_nimbers.append(MAC_nimber(H, n, seen))
     return mex(child_nimbers)
+
+
 
 
 

@@ -20,13 +20,13 @@ from graphs import (
     complete_graph_nodes, complete_graph_adjacency_listing,
     complete_multipartite_graph_nodes, complete_multipartite_graph_adjacency_listing,
 )
-from nimber import nimber_output, multipartite_AAC_nimber, blossomX_AAC_nimber
+from nimber import nimber_output, multipartite_AAC_nimber, blossomX_AAC_nimber, MAC_nimber
 from gf2_even_kernel import all_even_kernels, has_zero_or_two_neighbors
 
 
 # ============================================================================
-# CLI: top-level choice of algorithm (nimbers for AAC, or even kernels), then
-# menu-driven graph selection shared by both
+# CLI: top-level choice of algorithm (nimbers for AAC, nimbers for MAC, or
+# even kernels), then menu-driven graph selection shared by all three
 # ============================================================================
 
 # every answer typed during a run is recorded so the main menu's 'r' option
@@ -148,11 +148,11 @@ def read_custom_graph():
     return build_graph(n, listing)
 
 
-# runs blossomX_AAC_nimber on G from vertex v and prints the result
-def run_single(G, v):
+# runs nimber_fn on G from vertex v and prints the result
+def run_single(G, v, nimber_fn):
     print()
     start = time.time()
-    nimber = nimber_output(blossomX_AAC_nimber(G, v))
+    nimber = nimber_output(nimber_fn(G, v))
     print(f'Nimber from vertex {v} = {nimber}')
     print("Runtime:", time.time() - start, "seconds")
 
@@ -176,19 +176,19 @@ def iterate_all_parts(sizes):
         print(f'part {p} (size {sizes[p]}): nimber {nimber}.  ({time.time() - start:.3f}s)')
 
 
-# runs blossomX_AAC_nimber once per vertex, printing the nimber for each; vertices
+# runs nimber_fn once per vertex, printing the nimber for each; vertices
 # defaults to all of G, but symmetric families can pass representatives only
-def iterate_all_vertices(G, vertices=None):
+def iterate_all_vertices(G, nimber_fn, vertices=None):
     print()
     for v in vertices if vertices is not None else G.nodes():
         start = time.time()
-        nimber = nimber_output(blossomX_AAC_nimber(G, v))
+        nimber = nimber_output(nimber_fn(G, v))
         print(f'v{v}: nimber {nimber}.  ({time.time() - start:.3f}s)')
 
 
-# runs blossomX_AAC_nimber from a fixed starting vertex v, once per size n in [n_start, n_end],
+# runs nimber_fn from a fixed starting vertex v, once per size n in [n_start, n_end],
 # building each graph via nodes_fn(n)/adjacency_fn(n); sizes where v isn't a vertex are skipped
-def iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v):
+def iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v, nimber_fn):
     print()
     for n in range(n_start, n_end + 1):
         G = build_graph(nodes_fn(n), adjacency_fn(n))
@@ -196,15 +196,15 @@ def iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v):
             print(f'{label}{n}: vertex {v} not in graph, skipping.')
             continue
         start = time.time()
-        nimber = nimber_output(blossomX_AAC_nimber(G, v))
+        nimber = nimber_output(nimber_fn(G, v))
         print(f'{label}{n}: nimber {nimber} from {v}.  ({time.time() - start:.3f}s)')
 
 
-# runs blossomX_AAC_nimber on complete split graphs CS(m, n) for every m in [m_start, m_end]
+# runs nimber_fn on complete split graphs CS(m, n) for every m in [m_start, m_end]
 # and n in [n_start, n_end], starting from an inner (clique) vertex or an outer
 # (independent set) vertex; inner vertices are all alike, so vertex 0 stands in
 # for any of them, and likewise vertex m for the outer ones
-def iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner):
+def iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner, nimber_fn):
     print()
     kind = 'inner' if inner else 'outer'
     for m in range(m_start, m_end + 1):
@@ -215,16 +215,16 @@ def iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner):
             G = build_graph(complete_split_graph_nodes(m, n), complete_split_graph_adjacency_listing(m, n))
             v = 0 if inner else m
             start = time.time()
-            nimber = nimber_output(blossomX_AAC_nimber(G, v))
+            nimber = nimber_output(nimber_fn(G, v))
             print(f'K{m} + K{n}: nimber {nimber} from {kind} vertex {v}.  ({time.time() - start:.3f}s)')
         print()
 
 
-# runs blossomX_AAC_nimber on generalized wheel graphs Cm + Kn for every m in
+# runs nimber_fn on generalized wheel graphs Cm + Kn for every m in
 # [m_start, m_end] and n in [n_start, n_end], starting from a cycle vertex or
 # a split (clique) vertex; cycle vertices are all alike, so vertex 0 stands in
 # for any of them, and likewise vertex m for the split vertices
-def iterate_generalized_wheel_grid(m_start, m_end, n_start, n_end, inner):
+def iterate_generalized_wheel_grid(m_start, m_end, n_start, n_end, inner, nimber_fn):
     print()
     kind = 'split' if inner else 'cycle'
     for m in range(m_start, m_end + 1):
@@ -235,12 +235,14 @@ def iterate_generalized_wheel_grid(m_start, m_end, n_start, n_end, inner):
             G = build_graph(generalized_wheel_graph_nodes(m, n), generalized_wheel_graph_adjacency_listing(m, n))
             v = m if inner else 0
             start = time.time()
-            nimber = nimber_output(blossomX_AAC_nimber(G, v))
+            nimber = nimber_output(nimber_fn(G, v))
             print(f'C{m} + K{n}: nimber {nimber} from {kind} vertex {v}.  ({time.time() - start:.3f}s)')
         print()
 
 
-def nimber_menu():
+def nimber_menu(algorithm):
+    nimber_fn = blossomX_AAC_nimber if algorithm == 'AAC' else MAC_nimber
+
     choice = graph_type_menu()
     if choice is None:
         return
@@ -275,7 +277,7 @@ def nimber_menu():
             n_start = int(ask('Starting complete graph size n? '))
             n_end = int(ask('Ending complete graph size n (inclusive)? '))
             inner = ask('Enter \'s\' to start from a split vertex and \'c\' for a cycle vertex? ').strip().lower().startswith('s')
-            iterate_generalized_wheel_grid(m_start, m_end, n_start, n_end, inner)
+            iterate_generalized_wheel_grid(m_start, m_end, n_start, n_end, inner, nimber_fn)
             return
         # generalized wheel graphs take two sizes: fix the cycle size m here, so
         # the single size parameter used below is the complete graph size n
@@ -290,7 +292,7 @@ def nimber_menu():
             n_start = int(ask('Starting independent node size n? '))
             n_end = int(ask('Ending independent node size n (inclusive)? '))
             inner = ask('Enter \'i\' to start from an inner vertex and \'o\' for an outer? ').strip().lower().startswith('i')
-            iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner)
+            iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner, nimber_fn)
             return
         # complete split graphs take two sizes: fix the complete graph size m here, so
         # the single size parameter used below is the independent set size n
@@ -299,7 +301,7 @@ def nimber_menu():
         adjacency_fn = lambda n: complete_split_graph_adjacency_listing(m, n)
         label = f'K{m} + K'
 
-    if choice == 10:
+    if choice == 10 and algorithm == 'AAC':
         # the closed-form solver works on the part sizes directly, so no
         # graph is ever built for complete multipartite nimbers
         if mode == 2:
@@ -307,6 +309,17 @@ def nimber_menu():
             return
         p = int(ask('What is your starting vertex (part number)? '))
         run_single_multipartite(sizes, p)
+
+    elif choice == 10:
+        # MAC has no closed-form solver, so the graph is built directly;
+        # vertices of a part are all alike, so one representative per part
+        # suffices for the "all vertices" mode
+        G = build_graph(complete_multipartite_graph_nodes(sizes), complete_multipartite_graph_adjacency_listing(sizes))
+        if mode == 2:
+            iterate_all_vertices(G, nimber_fn, [(p, 0) for p in range(len(sizes))])
+            return
+        p = int(ask('What is your starting vertex (part number)? '))
+        run_single(G, (p, 0), nimber_fn)
 
     elif choice in (1, 2, 3, 4, 5, 6, 7, 8, 9):
         # prism, tri grid, and rect grid vertices are (layer,index) pairs;
@@ -321,28 +334,28 @@ def nimber_menu():
             n_start = int(ask(f'Starting size of {label} graph? '))
             n_end = int(ask(f'Ending size of {label} graph (inclusive)? '))
             v = read_vertex('What is your fixed starting vertex')
-            iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v)
+            iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v, nimber_fn)
             return
 
         n = int(ask(f'What size of graph? {label}'))
         G = build_graph(nodes_fn(n), adjacency_fn(n))
 
         if mode == 2:
-            iterate_all_vertices(G)
+            iterate_all_vertices(G, nimber_fn)
             return
 
         v = read_vertex('What is your starting vertex')
-        run_single(G, v)
+        run_single(G, v, nimber_fn)
 
     elif choice == 11:
         G = read_custom_graph()
 
         if mode == 2:
-            iterate_all_vertices(G)
+            iterate_all_vertices(G, nimber_fn)
             return
 
         v = int(ask('What is your starting vertex? '))
-        run_single(G, v)
+        run_single(G, v, nimber_fn)
 
 
 # reports how many nonempty even kernels G has (printing one), then whether
@@ -488,8 +501,10 @@ def even_kernel_menu():
 def run_choice(choice):
     global _last_run, _replay_queue
     if choice == '1':
-        nimber_menu()
+        nimber_menu('AAC')
     elif choice == '2':
+        nimber_menu('MAC')
+    elif choice == '3':
         even_kernel_menu()
     else:
         print('Unknown option.')
@@ -516,8 +531,9 @@ def menu():
     print(' ===== Algorithms ===== ')
     print('(Press Esc at any time to exit)')
     print('(1) - Nimbers for AAC')
-    print('(2) - Even Kernels')
-    choice = read_line('Enter the option you would like (1-2): ').strip().lower()
+    print('(2) - Nimbers for MAC')
+    print('(3) - Even Kernels')
+    choice = read_line('Enter the option you would like (1-3): ').strip().lower()
     print()
 
     _current_run = [choice]
