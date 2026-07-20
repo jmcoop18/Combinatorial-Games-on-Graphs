@@ -14,12 +14,13 @@ from graphs import (
     path_graph_nodes, path_graph_adjacency_listing,
     cycle_graph_nodes, cycle_graph_adjacency_listing,
     wheel_graph_nodes, wheel_graph_adjacency_listing,
+    generalized_wheel_graph_nodes, generalized_wheel_graph_adjacency_listing,
     complete_split_graph_nodes, complete_split_graph_adjacency_listing,
     rect_grid_graph_nodes, rect_grid_graph_adjacency_listing,
     complete_graph_nodes, complete_graph_adjacency_listing,
     complete_multipartite_graph_nodes, complete_multipartite_graph_adjacency_listing,
 )
-from nimber import nx_AAC_nimber, nimber_output, multipartite_AAC_nimber, blossomX_AAC_nimber
+from nimber import nimber_output, multipartite_AAC_nimber, blossomX_AAC_nimber
 from gf2_even_kernel import all_even_kernels, has_zero_or_two_neighbors
 
 
@@ -103,11 +104,11 @@ def ask_multiline():
 # single-size graph families: choice -> (nodes_fn, adjacency_fn, label)
 GRAPH_TYPES = {
     1: (prism_graph_nodes, prism_graph_adjacency_listing, 'D'),
-    2: (cycle_graph_nodes, cycle_graph_adjacency_listing, 'C'),
-    3: (wheel_graph_nodes, wheel_graph_adjacency_listing, 'W'),
-    4: (path_graph_nodes, path_graph_adjacency_listing, 'P'),
-    5: (tri_grid_graph_nodes, tri_grid_graph_adjacency_listing, 'T'),
-    7: (complete_graph_nodes, complete_graph_adjacency_listing, 'K'),
+    2: (path_graph_nodes, path_graph_adjacency_listing, 'P'),
+    3: (cycle_graph_nodes, cycle_graph_adjacency_listing, 'C'),
+    4: (wheel_graph_nodes, wheel_graph_adjacency_listing, 'W'),
+    6: (tri_grid_graph_nodes, tri_grid_graph_adjacency_listing, 'T'),
+    8: (complete_graph_nodes, complete_graph_adjacency_listing, 'K'),
 }
 
 
@@ -117,17 +118,18 @@ def graph_type_menu():
     if not _replay_queue:
         print(' ===== Graph Types ===== ')
         print('(1) - Prism Graph')
-        print('(2) - Cycle Graph')
-        print('(3) - Wheel Graph')
-        print('(4) - Path Graph')
-        print('(5) - Triangular Grid Graph')
-        print('(6) - Rectangular Grid Graph')
-        print('(7) - Complete Graph')
-        print('(8) - Complete Split Graph')
-        print('(9) - Complete K-partite Graph')
-        print('(10) - Custom Adjacency Listing')
+        print('(2) - Path Graph')
+        print('(3) - Cycle Graph')
+        print('(4) - Wheel Graph')
+        print('(5) - Generalized Wheel Graph')
+        print('(6) - Triangular Grid Graph')
+        print('(7) - Rectangular Grid Graph')
+        print('(8) - Complete Graph')
+        print('(9) - Complete Split Graph')
+        print('(10) - Complete K-partite Graph')
+        print('(11) - Custom Adjacency Listing')
         print('(b) - Back')
-    choice = ask('Enter the option you would like (1-10, \'b\' to go back): ').strip().lower()
+    choice = ask('Enter the option you would like (1-11, \'b\' to go back): ').strip().lower()
     if not _replay_queue:
         print()
     if choice == 'b':
@@ -146,11 +148,11 @@ def read_custom_graph():
     return build_graph(n, listing)
 
 
-# runs nx_AAC_nimber on G from vertex v and prints the result
+# runs blossomX_AAC_nimber on G from vertex v and prints the result
 def run_single(G, v):
     print()
     start = time.time()
-    nimber = nimber_output(nx_AAC_nimber(G, v))
+    nimber = nimber_output(blossomX_AAC_nimber(G, v))
     print(f'Nimber from vertex {v} = {nimber}')
     print("Runtime:", time.time() - start, "seconds")
 
@@ -174,17 +176,17 @@ def iterate_all_parts(sizes):
         print(f'part {p} (size {sizes[p]}): nimber {nimber}.  ({time.time() - start:.3f}s)')
 
 
-# runs nx_AAC_nimber once per vertex, printing the nimber for each; vertices
+# runs blossomX_AAC_nimber once per vertex, printing the nimber for each; vertices
 # defaults to all of G, but symmetric families can pass representatives only
 def iterate_all_vertices(G, vertices=None):
     print()
     for v in vertices if vertices is not None else G.nodes():
         start = time.time()
-        nimber = nimber_output(nx_AAC_nimber(G, v))
+        nimber = nimber_output(blossomX_AAC_nimber(G, v))
         print(f'v{v}: nimber {nimber}.  ({time.time() - start:.3f}s)')
 
 
-# runs nx_AAC_nimber from a fixed starting vertex v, once per size n in [n_start, n_end],
+# runs blossomX_AAC_nimber from a fixed starting vertex v, once per size n in [n_start, n_end],
 # building each graph via nodes_fn(n)/adjacency_fn(n); sizes where v isn't a vertex are skipped
 def iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v):
     print()
@@ -198,7 +200,7 @@ def iterate_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v):
         print(f'{label}{n}: nimber {nimber} from {v}.  ({time.time() - start:.3f}s)')
 
 
-# runs nx_AAC_nimber on complete split graphs CS(m, n) for every m in [m_start, m_end]
+# runs blossomX_AAC_nimber on complete split graphs CS(m, n) for every m in [m_start, m_end]
 # and n in [n_start, n_end], starting from an inner (clique) vertex or an outer
 # (independent set) vertex; inner vertices are all alike, so vertex 0 stands in
 # for any of them, and likewise vertex m for the outer ones
@@ -213,8 +215,28 @@ def iterate_complete_split_grid(m_start, m_end, n_start, n_end, inner):
             G = build_graph(complete_split_graph_nodes(m, n), complete_split_graph_adjacency_listing(m, n))
             v = 0 if inner else m
             start = time.time()
-            nimber = nimber_output(nx_AAC_nimber(G, v))
+            nimber = nimber_output(blossomX_AAC_nimber(G, v))
             print(f'K{m} + K{n}: nimber {nimber} from {kind} vertex {v}.  ({time.time() - start:.3f}s)')
+        print()
+
+
+# runs blossomX_AAC_nimber on generalized wheel graphs Cm + Kn for every m in
+# [m_start, m_end] and n in [n_start, n_end], starting from a cycle vertex or
+# a split (clique) vertex; cycle vertices are all alike, so vertex 0 stands in
+# for any of them, and likewise vertex m for the split vertices
+def iterate_generalized_wheel_grid(m_start, m_end, n_start, n_end, inner):
+    print()
+    kind = 'split' if inner else 'cycle'
+    for m in range(m_start, m_end + 1):
+        for n in range(n_start, n_end + 1):
+            if (n == 0 and inner) or (m == 0 and not inner):
+                print(f'C{m} + K{n}: no {kind} vertex, skipping.')
+                continue
+            G = build_graph(generalized_wheel_graph_nodes(m, n), generalized_wheel_graph_adjacency_listing(m, n))
+            v = m if inner else 0
+            start = time.time()
+            nimber = nimber_output(blossomX_AAC_nimber(G, v))
+            print(f'C{m} + K{n}: nimber {nimber} from {kind} vertex {v}.  ({time.time() - start:.3f}s)')
         print()
 
 
@@ -227,26 +249,41 @@ def nimber_menu():
         print(' ===== Run Type ===== ')
         print('(1) - Single run (fixed size, fixed starting vertex)')
         print('(2) - Iterate over all vertices (fixed size)')
-        if choice not in [8, 9, 10]:
+        if choice not in [5, 9, 10, 11]:
             print('(3) - Iterate over a range of sizes (fixed starting vertex)')
-        if choice == 8:
+        if choice in (5, 9):
             print('(3) - Iterate over ranges of m and n (fixed inner/outer starting vertex)')
     mode = int(ask('Enter the mode you would like: '))
     print()
 
     if choice in GRAPH_TYPES:
         nodes_fn, adjacency_fn, label = GRAPH_TYPES[choice]
-    elif choice == 6:
+    elif choice == 7:
         # rectangular grids take two sizes: fix the row count here, so the
         # single size parameter used below is the number of columns
         rows = int(ask('Number of rows (m)? '))
         nodes_fn = lambda n: rect_grid_graph_nodes(rows, n)
         adjacency_fn = lambda n: rect_grid_graph_adjacency_listing(rows, n)
         label = f'R{rows}x'
-    elif choice == 9:
+    elif choice == 10:
         # parts may have different sizes, entered as a comma-separated list
         sizes = [int(t) for t in ask('Part sizes (comma-separated, e.g. 2,3,5)? ').split(',')]
-    elif choice == 8:
+    elif choice == 5:
+        if mode == 3:
+            m_start = int(ask('Starting cycle size (m)? '))
+            m_end = int(ask('Ending cycle size m (inclusive)? '))
+            n_start = int(ask('Starting complete graph size n? '))
+            n_end = int(ask('Ending complete graph size n (inclusive)? '))
+            inner = ask('Enter \'s\' to start from a split vertex and \'c\' for a cycle vertex? ').strip().lower().startswith('s')
+            iterate_generalized_wheel_grid(m_start, m_end, n_start, n_end, inner)
+            return
+        # generalized wheel graphs take two sizes: fix the cycle size m here, so
+        # the single size parameter used below is the complete graph size n
+        m = int(ask('Size of the cycle (m)? '))
+        nodes_fn = lambda n: generalized_wheel_graph_nodes(m, n)
+        adjacency_fn = lambda n: generalized_wheel_graph_adjacency_listing(m, n)
+        label = f'C{m} + K'
+    elif choice == 9:
         if mode == 3:
             m_start = int(ask('Starting complete graph size (m)? '))
             m_end = int(ask('Ending complete graph size m (inclusive)? '))
@@ -262,7 +299,7 @@ def nimber_menu():
         adjacency_fn = lambda n: complete_split_graph_adjacency_listing(m, n)
         label = f'K{m} + K'
 
-    if choice == 9:
+    if choice == 10:
         # the closed-form solver works on the part sizes directly, so no
         # graph is ever built for complete multipartite nimbers
         if mode == 2:
@@ -271,11 +308,11 @@ def nimber_menu():
         p = int(ask('What is your starting vertex (part number)? '))
         run_single_multipartite(sizes, p)
 
-    elif choice in (1, 2, 3, 4, 5, 6, 7, 8):
+    elif choice in (1, 2, 3, 4, 5, 6, 7, 8, 9):
         # prism, tri grid, and rect grid vertices are (layer,index) pairs;
         # the other families use int vertices
         def read_vertex(prompt):
-            if choice in (1, 5, 6):
+            if choice in (1, 6, 7):
                 r, c = (int(i) for i in ask(f'{prompt} (layer,index)? ').split(','))
                 return (r, c)
             return int(ask(f'{prompt}? '))
@@ -297,7 +334,7 @@ def nimber_menu():
         v = read_vertex('What is your starting vertex')
         run_single(G, v)
 
-    elif choice == 10:
+    elif choice == 11:
         G = read_custom_graph()
 
         if mode == 2:
@@ -372,7 +409,7 @@ def even_kernel_menu():
         print(' ===== Run Type ===== ')
         print('(1) - Single run (fixed size, fixed starting vertex)')
         print('(2) - Iterate over all vertices (fixed size)')
-        if choice not in [8, 9, 10]:
+        if choice not in [5, 9, 10, 11]:
             print('(3) - Iterate over a range of sizes (fixed starting vertex)')
     mode = int(ask('Enter the mode you would like: '))
     print()
@@ -381,17 +418,17 @@ def even_kernel_menu():
     # multipartite vertices of a part are all alike, so only the part number
     # is asked for; the rest are ints
     def read_vertex(prompt):
-        if choice == 9:
+        if choice == 10:
             return (int(ask(f'{prompt} (part number)? ')), 0)
-        if choice in (1, 5, 6):
+        if choice in (1, 6, 7):
             r, c = (int(i) for i in ask(f'{prompt} (layer,index)? ').split(','))
             return (r, c)
         return int(ask(f'{prompt}? '))
 
-    if choice in GRAPH_TYPES or choice in (6, 9):
+    if choice in GRAPH_TYPES or choice in (7, 10):
         if choice in GRAPH_TYPES:
             nodes_fn, adjacency_fn, label = GRAPH_TYPES[choice]
-        elif choice == 6:
+        elif choice == 7:
             # rectangular grids take two sizes: fix the row count here, so the
             # single size parameter used below is the number of columns
             rows = int(ask('Number of rows (m)? '))
@@ -409,7 +446,7 @@ def even_kernel_menu():
             even_kernel_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v)
             return
 
-        if choice == 9:
+        if choice == 10:
             G = build_graph(complete_multipartite_graph_nodes(sizes),
                             complete_multipartite_graph_adjacency_listing(sizes))
             name = f'K({",".join(str(s) for s in sizes)})'
@@ -417,12 +454,17 @@ def even_kernel_menu():
             n = int(ask(f'What size of graph? {label}'))
             G = build_graph(nodes_fn(n), adjacency_fn(n))
             name = f'{label}{n}'
-    elif choice == 8:
+    elif choice == 5:
+        m = int(ask('Size of the cycle (m)? '))
+        n = int(ask('Size of the complete graph (n)? '))
+        G = build_graph(generalized_wheel_graph_nodes(m, n), generalized_wheel_graph_adjacency_listing(m, n))
+        name = f'C{m} + K{n}'
+    elif choice == 9:
         m = int(ask('Size of the complete graph (m)? '))
         n = int(ask('Size of the independent set (n)? '))
         G = build_graph(complete_split_graph_nodes(m, n), complete_split_graph_adjacency_listing(m, n))
         name = f'K{m} + K{n}'
-    elif choice == 10:
+    elif choice == 11:
         G = read_custom_graph()
         name = 'custom graph'
     else:
@@ -432,7 +474,7 @@ def even_kernel_menu():
     if mode == 2:
         # in a complete multipartite graph every vertex of a part is alike,
         # so one representative per part suffices
-        even_kernel_all_vertices(G, [(p, 0) for p in range(len(sizes))] if choice == 9 else None)
+        even_kernel_all_vertices(G, [(p, 0) for p in range(len(sizes))] if choice == 10 else None)
         return
 
     v = read_vertex('What is your chosen vertex')
