@@ -141,28 +141,28 @@ def multipartite_AAC_nimber(sizes, p):
 # Functions to find Nimbers For MAC
 # ============================================================================
 
-def MAC_nimber(G, v, seen=None):
-    if seen is None:
-        seen = set() # set of previously visited vertices
+# def MAC_nimber(G, v, seen=None):
+#     if seen is None:
+#         seen = set() # set of previously visited vertices
    
-    if v in seen: 
-        return 0
+#     if v in seen: 
+#         return 0
         
-    neighbors = list(G.neighbors(v))
+#     neighbors = list(G.neighbors(v))
     
-    if len(neighbors) == 0: 
-        return 0
+#     if len(neighbors) == 0: 
+#         return 0
 
-    new_seen = seen | {v}
-    child_nimbers = []
-    for n in neighbors:
-        H = G.copy()
-        H.remove_edge(v, n)
-        child_nimbers.append(MAC_nimber(H, n, new_seen))
-    return mex(child_nimbers)
+#     new_seen = seen | {v}
+#     child_nimbers = []
+#     for n in neighbors:
+#         H = G.copy()
+#         H.remove_edge(v, n)
+#         child_nimbers.append(MAC_nimber(H, n, new_seen))
+#     return mex(child_nimbers)
      
      
-def memo_MAC_nimber(G, v, seen=None, memo=None):
+def MAC_nimber(G, v, seen=None, memo=None):
     if seen is None:
         seen = set() # set of previously visited vertices
         
