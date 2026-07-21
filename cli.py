@@ -516,12 +516,15 @@ def run_choice(choice):
     _replay_queue = None
 
 
-# replays the algorithm, graph type, and run type of the last completed
-# selection (its first three recorded answers), then picks the menu back up
-# there, prompting for sizes and vertices as usual
-def rerun_last():
+# replays the first `depth` recorded answers of the last completed selection,
+# then picks the menu back up there, prompting live for the rest as usual;
+# depth 1 replays just the algorithm (so a new graph type is asked), depth 2
+# replays the algorithm and graph type (so a new run type is asked), and
+# depth 3 replays the algorithm, graph type, and run type (so only the
+# sizes/vertices are asked, i.e. a full rerun with the same menu choices)
+def rerun_from(depth):
     global _current_run, _replay_queue
-    _replay_queue = list(_last_run[:3])
+    _replay_queue = list(_last_run[:depth])
     _current_run = [_replay_queue.pop(0)]
     run_choice(_current_run[0])
 
@@ -569,12 +572,18 @@ if __name__ == '__main__':
         sys.exit(0)
     keep_going = menu()
     while keep_going:
-        hint = ' (or space + Enter to rerun the last graph & run type)' if _last_run else ''
-        again = read_line(f'\nPress Enter to continue{hint}...')
+        if _last_run:
+            prompt = ('\nPress Enter for a new algorithm, or type '
+                      '(1) new graph type, (2) new run type, (3) rerun same choices, then Enter: ')
+        else:
+            prompt = '\nPress Enter to continue...'
+        again = read_line(prompt).strip()
         print()
-        # a line of only whitespace (space then Enter) means rerun;
-        # a bare Enter or anything else goes back to the menu
-        if again and not again.strip() and _last_run:
-            rerun_last()
+        if again == '1' and _last_run:
+            rerun_from(1)
+        elif again == '2' and _last_run:
+            rerun_from(2)
+        elif again == '3' and _last_run:
+            rerun_from(3)
         else:
             keep_going = menu()

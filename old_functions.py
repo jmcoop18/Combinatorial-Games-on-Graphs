@@ -25,26 +25,26 @@
 
 
 # returns the nimber for AAC on a graph G from a starting vertex v
-# def AAC_nimber(G, v, memo=None, msize=None):
-#     if memo is None: # create empty caches if top level call
-#         memo = {} # cache for previously calculated nimbers
-#         msize = {} # cache for previously calculated matchings
+def AAC_nimber(G, v, memo=None, msize=None):
+    if memo is None: # create empty caches if top level call
+        memo = {} # cache for previously calculated nimbers
+        msize = {} # cache for previously calculated matchings
     
-#     G = G.subgraph(nx.node_connected_component(G, v))
-#     key = (frozenset(G.nodes), v)
-#     if key in memo: # if the nimber has already been calculated return it
-#         return memo[key]
+    G = G.subgraph(nx.node_connected_component(G, v))
+    key = (frozenset(G.nodes), v)
+    if key in memo: # if the nimber has already been calculated return it
+        return memo[key]
     
-#     # make a copy of the game and remove v
-#     new_G = G.copy()
-#     new_G.remove_node(v)
+    # make a copy of the game and remove v
+    new_G = G.copy()
+    new_G.remove_node(v)
     
-#     # calculate nimber
-#     M = nx.Graph()
-#     _, winner = AAC_winner(G, M, v)
+    # calculate nimber
+    M = nx.Graph()
+    _, winner = AAC_winner(G, M, v)
 
-#     if winner == 'P2':
-#         memo[key] = 0
-#     else:
-#         memo[key] = mex(AAC_nimber(new_G, n, memo, msize) for n in G.neighbors(v))
-#     return memo[key]
+    if winner == 'P2':
+        memo[key] = 0
+    else:
+        memo[key] = mex(AAC_nimber(new_G, n, memo, msize) for n in G.neighbors(v))
+    return memo[key]

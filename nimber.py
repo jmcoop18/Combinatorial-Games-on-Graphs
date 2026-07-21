@@ -143,26 +143,54 @@ def multipartite_AAC_nimber(sizes, p):
 
 def MAC_nimber(G, v, seen=None):
     if seen is None:
-        seen = set()
-        
-    if v in seen:
+        seen = set() # set of previously visited vertices
+   
+    if v in seen: 
         return 0
-    
+        
     neighbors = list(G.neighbors(v))
     
-    if len(neighbors) == 0:
+    if len(neighbors) == 0: 
         return 0
-    
-    # if any(vertex in seen for vertex in neighbors):
-    #     return 1
-    seen.add(v)
-    
+
+    new_seen = seen | {v}
     child_nimbers = []
     for n in neighbors:
         H = G.copy()
         H.remove_edge(v, n)
-        child_nimbers.append(MAC_nimber(H, n, seen))
+        child_nimbers.append(MAC_nimber(H, n, new_seen))
     return mex(child_nimbers)
+     
+     
+def memo_MAC_nimber(G, v, seen=None, memo=None):
+    if seen is None:
+        seen = set() # set of previously visited vertices
+        
+    if memo is None:
+        memo = {} # cache for previously calculated nimbers
+    
+    key = (frozenset(frozenset(e) for e in G.edges()), v, frozenset(seen))
+    if key in memo:
+        return memo[key]
+        
+    if v in seen: 
+        memo[key] = 0
+        return memo[key]
+        
+    neighbors = list(G.neighbors(v))
+    
+    if len(neighbors) == 0: 
+        memo[key] = 0
+        return memo[key]
+
+    new_seen = seen | {v}
+    child_nimbers = []
+    for n in neighbors:
+        H = G.copy()
+        H.remove_edge(v, n)
+        child_nimbers.append(MAC_nimber(H, n, new_seen, memo))
+    memo[key] = mex(child_nimbers)
+    return memo[key]
 
 
 
