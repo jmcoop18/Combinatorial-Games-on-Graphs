@@ -141,6 +141,7 @@ def multipartite_AAC_nimber(sizes, p):
 # Functions to find Nimbers For MAC
 # ============================================================================
 
+# original MAC nimber calculator using brute-force and looking through the whole game tree
 # def MAC_nimber(G, v, seen=None):
 #     if seen is None:
 #         seen = set() # set of previously visited vertices
@@ -161,38 +162,52 @@ def multipartite_AAC_nimber(sizes, p):
 #         child_nimbers.append(MAC_nimber(H, n, new_seen))
 #     return mex(child_nimbers)
      
-     
-def MAC_nimber(G, v, seen=None, memo=None):
-    if seen is None:
-        seen = set() # set of previously visited vertices
-        
-    if memo is None:
-        memo = {} # cache for previously calculated nimbers
-    
-    key = (frozenset(frozenset(e) for e in G.edges()), v, frozenset(seen))
-    if key in memo:
-        return memo[key]
-        
-    if v in seen: 
-        memo[key] = 0
-        return memo[key]
-        
-    neighbors = list(G.neighbors(v))
-    
-    if len(neighbors) == 0: 
-        memo[key] = 0
-        return memo[key]
 
-    new_seen = seen | {v}
+
+# same as MAC_nimber, but the graph is packed into bitmasks 
+# (adj[i] = bitmask of i's neighbors, 
+# seen = bitmask of visited vertices) instead of copying a networkx Graph on every move;
+# this makes the memo key (adj, v, seen_mask) cheap to build and hash, 
+# so caching actually pays off
+def bitmask_MAC_nimber(G, v):
+    nodes = list(G.nodes)
+    index = {u: i for i, u in enumerate(nodes)}
+    adj = [0] * len(nodes)
+    for a, b in G.edges():
+        ia, ib = index[a], index[b]
+        adj[ia] |= 1 << ib
+        adj[ib] |= 1 << ia
+    return _bitmask_MAC_nimber(tuple(adj), index[v], 0, {})
+
+
+def _bitmask_MAC_nimber(adj, v, seen_mask, memo):
+    bit = 1 << v
+    if seen_mask & bit: return 0
+
+    neighbors = adj[v]
+    if neighbors == 0: return 0
+
+    key = (adj, v, seen_mask)
+    cached = memo.get(key)
+    if cached is not None:
+        return cached
+
+    new_seen_mask = seen_mask | bit
     child_nimbers = []
-    for n in neighbors:
-        H = G.copy()
-        H.remove_edge(v, n)
-        child_nimbers.append(MAC_nimber(H, n, new_seen, memo))
-    memo[key] = mex(child_nimbers)
-    return memo[key]
+    remaining = neighbors
+    while remaining:
+        low = remaining & -remaining      # isolate the lowest set bit
+        n = low.bit_length() - 1          # bit position -> vertex index
+        remaining ^= low                  # move on to the next neighbor
 
+        new_adj = list(adj)
+        new_adj[v] &= ~low
+        new_adj[n] &= ~bit
+        child_nimbers.append(_bitmask_MAC_nimber(tuple(new_adj), n, new_seen_mask, memo))
 
+    result = mex(child_nimbers)
+    memo[key] = result
+    return result
 
 
 

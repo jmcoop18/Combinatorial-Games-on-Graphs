@@ -20,7 +20,7 @@ from graphs import (
     complete_graph_nodes, complete_graph_adjacency_listing,
     complete_multipartite_graph_nodes, complete_multipartite_graph_adjacency_listing,
 )
-from nimber import nimber_output, multipartite_AAC_nimber, blossomX_AAC_nimber, MAC_nimber
+from nimber import nimber_output, multipartite_AAC_nimber, blossomX_AAC_nimber, bitmask_MAC_nimber
 from gf2_even_kernel import all_even_kernels, has_zero_or_two_neighbors
 
 
@@ -241,7 +241,7 @@ def iterate_generalized_wheel_grid(m_start, m_end, n_start, n_end, inner, nimber
 
 
 def nimber_menu(algorithm):
-    nimber_fn = blossomX_AAC_nimber if algorithm == 'AAC' else MAC_nimber
+    nimber_fn = blossomX_AAC_nimber if algorithm == 'AAC' else bitmask_MAC_nimber
 
     choice = graph_type_menu()
     if choice is None:
