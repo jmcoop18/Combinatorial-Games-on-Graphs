@@ -105,20 +105,18 @@ def generalized_wheel_graph_nodes(m, n):
 def generalized_wheel_graph_adjacency_listing(m, n):
     L = []
 
-    # cycle edges (cycle on the first m vertices); m=1 has no wrap-around
-    # edge to add, since that would be a self-loop
+    # cycle edges (cycle on the first m vertices)
     for i in range(m):
         if m > 1:
             L.append((i, (i + 1) % m))
 
-    # split edges (complete graph on the last n vertices)
-    for i in range(m, m + n):
-        for j in range(i + 1, m + n):
-            L.append((i, j))
+    # for i in range(m, m + n):
+    #     for j in range(i + 1, m + n):
+    #         L.append((i, j))
 
     # spokes: join every cycle vertex to every split vertex
-    for i in range(m):
-        for j in range(m, m + n):
+    for i in range(m, m + n):
+        for j in range(m):
             L.append((i, j))
 
     return L
@@ -202,3 +200,7 @@ def build_graph(nodes, listing):
     graph.add_edges_from(listing)
 
     return graph
+
+
+if __name__ == "__main__":
+    print(cycle_graph_adjacency_listing(1))

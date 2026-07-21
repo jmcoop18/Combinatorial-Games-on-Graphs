@@ -23,6 +23,7 @@
 #     return mex(child_nimbers)
 
 
+
 # returns the nimber for AAC on a graph G from a starting vertex v
 # def AAC_nimber(G, v, memo=None, msize=None):
 #     if memo is None: # create empty caches if top level call
