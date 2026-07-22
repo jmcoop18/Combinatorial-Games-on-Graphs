@@ -42,13 +42,13 @@ def nx_AAC_nimber(G, v, memo=None, msize=None):
         memo = {} # cache for previously calculated nimbers
         msize = {} # cache for previously calculated matchings
 
-    G = G.subgraph(nx.node_connected_component(G, v))   # 3
+    G = G.subgraph(nx.node_connected_component(G, v))
     key = (frozenset(G.nodes), v)
     if key in memo: # if the nimber has already been calculated return it
         return memo[key]
 
     # returns the size of a maximum matching 
-    def matching_size(H):                                # 2 + 4
+    def matching_size(H):
         m = frozenset(H.nodes)
         if m not in msize: # add matching to the cache if it's a new calculation
             msize[m] = len(nx.max_weight_matching(H, maxcardinality=True))
@@ -141,29 +141,7 @@ def multipartite_AAC_nimber(sizes, p):
 # Functions to find Nimbers For MAC
 # ============================================================================
 
-# original MAC nimber calculator using brute-force and looking through the whole game tree
-# def MAC_nimber(G, v, seen=None):
-#     if seen is None:
-#         seen = set() # set of previously visited vertices
-   
-#     if v in seen: 
-#         return 0
-        
-#     neighbors = list(G.neighbors(v))
-    
-#     if len(neighbors) == 0: 
-#         return 0
-
-#     new_seen = seen | {v}
-#     child_nimbers = []
-#     for n in neighbors:
-#         H = G.copy()
-#         H.remove_edge(v, n)
-#         child_nimbers.append(MAC_nimber(H, n, new_seen))
-#     return mex(child_nimbers)
      
-
-
 # same as MAC_nimber, but the graph is packed into bitmasks 
 # (adj[i] = bitmask of i's neighbors, 
 # seen = bitmask of visited vertices) instead of copying a networkx Graph on every move;
