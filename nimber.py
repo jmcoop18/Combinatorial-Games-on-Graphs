@@ -1,9 +1,7 @@
-import hashlib
 from functools import lru_cache
 
 import networkx as nx
 
-from matching import AAC_winner
 from rust_matching import matching_size as rust_matching_size
 
 

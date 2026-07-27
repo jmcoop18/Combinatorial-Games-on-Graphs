@@ -93,15 +93,15 @@ def wheel_graph_adjacency_listing(n):
     return L
 
 
-# returns list of vertex labels for a generalized wheel graph Cm + Kn:
-# vertices 0..m-1 are the cycle vertices (a cycle), vertices m..m+n-1 are the
-# split vertices (a complete graph), and every cycle vertex is joined to every
-# split vertex. Cm + K1 is the ordinary wheel graph.
+# returns list of vertex labels for a generalized wheel graph: vertices
+# 0..m-1 are the cycle vertices (a cycle), vertices m..m+n-1 are the split
+# vertices (an independent set), and every cycle vertex is joined to every
+# split vertex. n=1 is the ordinary wheel graph.
 def generalized_wheel_graph_nodes(m, n):
     return list(range(m + n))
 
 
-# returns adjacency listing for the generalized wheel graph Cm + Kn
+# returns adjacency listing for the generalized wheel graph described above
 def generalized_wheel_graph_adjacency_listing(m, n):
     L = []
 
@@ -109,10 +109,6 @@ def generalized_wheel_graph_adjacency_listing(m, n):
     for i in range(m):
         if m > 1:
             L.append((i, (i + 1) % m))
-
-    # for i in range(m, m + n):
-    #     for j in range(i + 1, m + n):
-    #         L.append((i, j))
 
     # spokes: join every cycle vertex to every split vertex
     for i in range(m, m + n):

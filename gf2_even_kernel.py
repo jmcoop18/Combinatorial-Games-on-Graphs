@@ -98,12 +98,6 @@ def is_even_kernel(G, S):
     )
 
 
-
-    A, nodes, _ = adjacency_matrix_gf2(G, nodes)
-    basis, _, _ = null_space_basis(A)
-    return [[nodes[i] for i, b in enumerate(v) if b] for v in basis], nodes
-
-
 # every vertex outside S is adjacent to exactly 0 or 2 vertices in S?
 # (stricter than evenness: rules out 4, 6, ... neighbors in S)
 def has_zero_or_two_neighbors(G, S):
@@ -208,12 +202,3 @@ def visualize_even_kernels(G, nodes=None, layout=None, name="G", max_panels=16):
         name = f"{name} — first {max_panels} of {len(kernels)} kernels"
         kernels = kernels[:max_panels]
     return visualize_kernels(G, kernels, layout=layout, name=name)
-
-
-    G = build_graph(prism_graph_nodes(n), prism_graph_adjacency_listing(n))
-    walkthrough(G, name="prism n={n}")
-    visualize_even_kernels(G, name="prism n={n}")
-    #
-    # G = build_graph(cycle_graph_nodes(5), cycle_graph_adjacency_listing(5))
-    # walkthrough(G, name="cycle n=5")
-    # visualize_even_kernels(G, name="cycle n=5")

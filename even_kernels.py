@@ -5,10 +5,6 @@ from graphs import (
     build_graph,
     prism_graph_nodes, prism_graph_adjacency_listing,
     tri_grid_graph_nodes, tri_grid_graph_adjacency_listing,
-    path_graph_nodes, path_graph_adjacency_listing,
-    cycle_graph_nodes, cycle_graph_adjacency_listing,
-    wheel_graph_nodes, wheel_graph_adjacency_listing,
-    complete_split_graph_nodes, complete_split_graph_adjacency_listing,
 )
 
 import networkx as nx
@@ -85,30 +81,31 @@ def find_even_kernel(G, v, S, notS, depth=0):
     [find_even_kernel(G, n, S, notS, depth+1) for n in new_to_S]
 
 
-n = 3
-G = build_graph(tri_grid_graph_nodes(n), tri_grid_graph_adjacency_listing(n))
-layout = 'tri'
-# G = build_graph(prism_graph_nodes(n), prism_graph_adjacency_listing(n))
-# layout = 'prism'
-v = (0,0)
+if __name__ == "__main__":
+    n = 3
+    G = build_graph(tri_grid_graph_nodes(n), tri_grid_graph_adjacency_listing(n))
+    layout = 'tri'
+    # G = build_graph(prism_graph_nodes(n), prism_graph_adjacency_listing(n))
+    # layout = 'prism'
+    v = (0, 0)
 
-# custom_nodes = [(0,0), (0,1), (0,2), (0,3), (0,4), (0,5),
-#                 (1,0), (1,1), (1,2), (1,3), (1,4), (1,5),
-#                 (2,0), (2,1), (2,2), (2,3), (2,4), (2,5),
-#                 (3,0), (3,1), (3,2), (3,3), (3,4), (3,5),
-#                 (4,0), (4,1), (4,2), (4,3), (4,4), (4,5)]
-# custom_adjacency_listing = (
-#     [((r, c), (r, c + 1)) for r in range(5) for c in range(5)] +
-#     [((r, c), (r + 1, c)) for r in range(4) for c in range(6)]
-# )
-# G = build_graph(custom_nodes, custom_adjacency_listing)
-# v = custom_nodes[0]
+    # custom_nodes = [(0,0), (0,1), (0,2), (0,3), (0,4), (0,5),
+    #                 (1,0), (1,1), (1,2), (1,3), (1,4), (1,5),
+    #                 (2,0), (2,1), (2,2), (2,3), (2,4), (2,5),
+    #                 (3,0), (3,1), (3,2), (3,3), (3,4), (3,5),
+    #                 (4,0), (4,1), (4,2), (4,3), (4,4), (4,5)]
+    # custom_adjacency_listing = (
+    #     [((r, c), (r, c + 1)) for r in range(5) for c in range(5)] +
+    #     [((r, c), (r + 1, c)) for r in range(4) for c in range(6)]
+    # )
+    # G = build_graph(custom_nodes, custom_adjacency_listing)
+    # v = custom_nodes[0]
 
-S = {v}
-notS = set()
+    S = {v}
+    notS = set()
 
-find_even_kernel(G, v, S, notS)
-print("S =", S)
-print("notS =", notS)
+    find_even_kernel(G, v, S, notS)
+    print("S =", S)
+    print("notS =", notS)
 
-visualize_grid_kernel(G, S, notS, v, layout=layout)
+    visualize_grid_kernel(G, S, notS, v, layout=layout)
