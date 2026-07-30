@@ -6,9 +6,9 @@ Computer code for playing the combinatorial games <i>Make-A-Cycle</i> (MAC) and 
 
 ### AAC
 
-For a starting vertex v, `blossomX_AAC_nimber` (and its pure-networkx counterpart `nx_AAC_nimber`) determines the AAC winner from v via `AAC_winner`, then recurses on each neighbor of v with v removed from the graph, combining the child nimbers with the mex (minimum excluded value) and working back up the game tree to get the nimber. Both cache nimbers and matching sizes keyed on `(subgraph, vertex)` so repeated positions are never recomputed.
+For a starting vertex v, `blossomX_AAC_nimber` (and its pure-networkx counterpart `nx_AAC_nimber`) decides the winner from v, and if player 1 wins, recurses on each neighbor of v with v removed from the graph, combining the child nimbers with the mex (minimum excluded value) and working back up the game tree to get the nimber. Both cache nimbers and matching sizes keyed on `(subgraph, vertex)` so repeated positions are never recomputed.
 
-`AAC_winner` decides the winner by comparing the size of a maximum matching on G against the size of a maximum matching on G with v removed. If they're equal, player 2 wins, otherwise player 1 wins. Matchings are computed with `find_maximum_matching` (in `matching.py`), which repeatedly finds an augmenting path and augments the matching along it until none remain (Edmonds' blossom algorithm) — either the from-scratch Python implementation, or the Rust `xblossom` extension via `rust_matching.py` for speed, with a transparent networkx fallback if the extension isn't built.
+The winner is decided by comparing the size of a maximum matching on G against the size of a maximum matching on G with v removed: if they're equal, player 2 wins (nimber 0, and the subtree is pruned); otherwise player 1 wins. `blossomX_AAC_nimber` gets those matching sizes from the Rust `xblossom` extension via `rust_matching.py` for speed, with a transparent networkx fallback if the extension isn't built; `nx_AAC_nimber` uses networkx directly. `matching.py` holds a from-scratch implementation of the same idea — `find_maximum_matching` repeatedly finds an augmenting path and augments the matching along it until none remain (Edmonds' blossom algorithm), and `AAC_winner` wraps the matching-size comparison — kept as a readable baseline.
 
 For complete multipartite graphs, `multipartite_AAC_nimber` skips matching-based recursion entirely in favor of a closed-form matching-size formula, since the matching size of K(n1,...,nk) is known directly from the part sizes.
 
@@ -56,7 +56,7 @@ Running `python cli.py sweep <k>` (instead of opening the menu) sweeps AAC nimbe
 |---|---|
 | `cli.py` | Menu-driven entry point for running the tool |
 | `graphs.py` | Builds prism, path, cycle, wheel, generalized wheel, triangular/rectangular grid, complete, complete split, and complete k-partite graphs, plus custom adjacency listings |
-| `matching.py` | Maximum matching (from-scratch Edmonds' blossom algorithm) and AAC win determination |
+| `matching.py` | From-scratch maximum matching (Edmonds' blossom, plus a Micali-Vazirani variant used for speed comparisons) and AAC win determination; a readable baseline, kept alongside the faster `rust_matching.py` path |
 | `rust_matching.py` | Drop-in matching-size/maximum-matching functions backed by the Rust `xblossom` extension, falling back to networkx if it isn't built |
 | `xblossom/` | Rust implementation of blossom matching, built via maturin and called from `rust_matching.py` |
 | `nimber.py` | Nimber computation for AAC and MAC on top of `matching.py`, plus the closed-form complete-multipartite solver |

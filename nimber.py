@@ -4,11 +4,9 @@ import networkx as nx
 
 from rust_matching import matching_size as rust_matching_size
 
-
 # ============================================================================
 # Nimber Helper Functions
 # ============================================================================
-
 # returns the mex (minimum excluded value) of the list input
 # mex([0, 1, 3, 4]) -> returns 2
 # mex([0, 1, 2, 3]) -> returns 4
@@ -34,7 +32,6 @@ def nimber_output(n):
 # ============================================================================
 # Functions to find Nimbers For AAC
 # ============================================================================
-
 def nx_AAC_nimber(G, v, memo=None, msize=None):
     if memo is None: # create empty caches if top level call
         memo = {} # cache for previously calculated nimbers
@@ -138,8 +135,6 @@ def multipartite_AAC_nimber(sizes, p):
 # ============================================================================
 # Functions to find Nimbers For MAC
 # ============================================================================
-
-     
 # same as MAC_nimber, but the graph is packed into bitmasks 
 # (adj[i] = bitmask of i's neighbors, 
 # seen = bitmask of visited vertices) instead of copying a networkx Graph on every move;
@@ -184,8 +179,3 @@ def _bitmask_MAC_nimber(adj, v, seen_mask, memo):
     result = mex(child_nimbers)
     memo[key] = result
     return result
-
-
-
-if __name__ == "__main__":
-    pass

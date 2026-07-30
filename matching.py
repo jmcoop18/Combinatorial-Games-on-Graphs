@@ -10,10 +10,14 @@ import networkx as nx
 
 # INPUT:  Graph G, initial matching M on G
 # OUTPUT: maximum matching M* on G
+# Repeatedly finds an augmenting path and augments M along it until none
+# remain. The augmenting-path finder is swappable: find_augmenting_path is
+# the from-scratch blossom implementation; the two commented alternatives
+# (networkx-backed and Micali-Vazirani) were used to compare speed.
 def find_maximum_matching(G, M):
-    P = find_augmenting_path(G, M) # my algorithm
-    # P = find_augmenting_path_max_matching(G, M) # networkx version
-    # P = find_augmenting_path_micali_vazirani(G, M) # vazirani version 
+    P = find_augmenting_path(G, M)
+    # P = find_augmenting_path_max_matching(G, M)         # networkx version
+    # P = find_augmenting_path_micali_vazirani(G, M)      # Micali-Vazirani version
 
     if P == []:  # Base case
         return M
@@ -32,7 +36,9 @@ def dist_to_root(point, root, Graph):
     return len(path) - 1
 
 
-# 
+# finds a single augmenting path in G with respect to matching M, growing an
+# alternating forest from the exposed vertices and contracting/lifting blossoms
+# as it goes; returns the path as a list of vertices, or [] if none exists
 def find_augmenting_path(G, M, Blossom_stack=None):
     if Blossom_stack is None:
         Blossom_stack = []

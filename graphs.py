@@ -2,8 +2,11 @@ import networkx as nx
 
 
 # ============================================================================
-# Graph construction: prism, triangular grid, path, cycle, wheel, and complete
-# split graphs, plus arbitrary adjacency listings, all funnel through build_graph()
+# Graph construction: prism, triangular grid, path, cycle, wheel, generalized
+# wheel, complete, complete split, complete multipartite, and rectangular grid
+# graphs, plus arbitrary adjacency listings, all funnel through build_graph().
+# Each family has a *_nodes(n) function returning its vertex labels and a
+# *_adjacency_listing(n) function returning its edges as (u, v) pairs.
 # ============================================================================
 
 # returns list of (layer, index) vertex labels for a prism graph with n sides:
@@ -118,9 +121,9 @@ def generalized_wheel_graph_adjacency_listing(m, n):
     return L
 
 
-# returns list of vertex labels for a wheel graph with n vertices total:
-# vertices 0... m-1 are the complete graph, is the hub
-# vertices m... n-1 are the independent nodes
+# returns list of vertex labels for the complete split graph Km + Kn:
+# vertices 0..m-1 form the clique (Km), vertices m..m+n-1 form the
+# independent set, and every clique vertex is joined to every independent one
 def complete_split_graph_nodes(m, n):
     return list(range(m + n))
 
@@ -196,7 +199,3 @@ def build_graph(nodes, listing):
     graph.add_edges_from(listing)
 
     return graph
-
-
-if __name__ == "__main__":
-    print(cycle_graph_adjacency_listing(1))

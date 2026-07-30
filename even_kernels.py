@@ -1,11 +1,7 @@
-# old method, replaced by gf2_even_kernel.py
-# *incomplete*
-
-from graphs import (
-    build_graph,
-    prism_graph_nodes, prism_graph_adjacency_listing,
-    tri_grid_graph_nodes, tri_grid_graph_adjacency_listing,
-)
+# Earlier, incomplete even-kernel approach, superseded by gf2_even_kernel.py.
+# Kept as a baseline/reference; not used by the CLI. find_even_kernel greedily
+# walks outward from a vertex trying to build an even kernel, but doesn't
+# explore every branch, so it can miss kernels the GF(2) solver finds.
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -72,40 +68,6 @@ def find_even_kernel(G, v, S, notS, depth=0):
             notS.add(unmarked_vertices[0])
             unmarked_vertices = unmarked_vertices[1:]
 
-    # print("depth =",depth)
-    # print("S =", S)
-    # print("notS =", notS)
-    # visualize_grid_kernel(G, S, notS, v)
-    # print(new_to_S)
-
     [find_even_kernel(G, n, S, notS, depth+1) for n in new_to_S]
 
 
-if __name__ == "__main__":
-    n = 3
-    G = build_graph(tri_grid_graph_nodes(n), tri_grid_graph_adjacency_listing(n))
-    layout = 'tri'
-    # G = build_graph(prism_graph_nodes(n), prism_graph_adjacency_listing(n))
-    # layout = 'prism'
-    v = (0, 0)
-
-    # custom_nodes = [(0,0), (0,1), (0,2), (0,3), (0,4), (0,5),
-    #                 (1,0), (1,1), (1,2), (1,3), (1,4), (1,5),
-    #                 (2,0), (2,1), (2,2), (2,3), (2,4), (2,5),
-    #                 (3,0), (3,1), (3,2), (3,3), (3,4), (3,5),
-    #                 (4,0), (4,1), (4,2), (4,3), (4,4), (4,5)]
-    # custom_adjacency_listing = (
-    #     [((r, c), (r, c + 1)) for r in range(5) for c in range(5)] +
-    #     [((r, c), (r + 1, c)) for r in range(4) for c in range(6)]
-    # )
-    # G = build_graph(custom_nodes, custom_adjacency_listing)
-    # v = custom_nodes[0]
-
-    S = {v}
-    notS = set()
-
-    find_even_kernel(G, v, S, notS)
-    print("S =", S)
-    print("notS =", notS)
-
-    visualize_grid_kernel(G, S, notS, v, layout=layout)

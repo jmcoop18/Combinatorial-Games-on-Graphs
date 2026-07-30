@@ -1,4 +1,3 @@
-import itertools
 import os
 import re
 import select
@@ -22,6 +21,7 @@ from graphs import (
 )
 from nimber import nimber_output, multipartite_AAC_nimber, blossomX_AAC_nimber, bitmask_MAC_nimber
 from gf2_even_kernel import all_even_kernels, has_zero_or_two_neighbors
+from visualize import visualize_kernels
 
 
 # ============================================================================
@@ -82,7 +82,6 @@ def read_line(prompt=''):
 # input() replacement: records the answer, and during a replay silently
 # consumes the saved answer instead of prompting
 def ask(prompt):
-    global _replay_queue
     if _replay_queue:
         answer = _replay_queue.pop(0)
     else:
@@ -93,7 +92,6 @@ def ask(prompt):
 
 # sys.stdin.read() replacement (custom adjacency listings), recorded the same way
 def ask_multiline():
-    global _replay_queue
     if _replay_queue:
         raw = _replay_queue.pop(0)
     else:
@@ -376,6 +374,10 @@ def even_kernel_single(G, v, name):
         print(f'{v} is not in any restricted even kernels.')
     print(f'Runtime: {time.time() - start:.3f} seconds')
 
+    # show a picture of the restricted even kernel containing v (if any)
+    if restricted_with_v:
+        visualize_kernels(G, [restricted_with_v[0]], name=name)
+
 
 # for each vertex, reports whether some restricted even kernel contains it;
 # the kernels are computed once since they don't depend on the vertex, and
@@ -411,8 +413,7 @@ def even_kernel_size_range(nodes_fn, adjacency_fn, label, n_start, n_end, v):
         print(f'{label}{n}: {len(kernels)} nonempty even kernel(s); {status}.  ({time.time() - start:.3f}s)')
 
 
-# prompts for a graph, run type, and vertex, then runs the matching even
-# kernel routine
+# prompts for a graph, run type, and vertex, then runs the even-kernel search
 def even_kernel_menu():
     choice = graph_type_menu()
     if choice is None:
@@ -545,31 +546,8 @@ def menu():
     return True
 
 
-# testing sweep: k-partite K(a1,...,a_{k-1},d) over all nondecreasing small
-# part sizes a1 <= ... <= a_{k-1} <= c_max with dominant part
-# d = a1 + ... + a_{k-1} + 1, printing the nimber from every part of each graph;
-# run with `python cli.py sweep <k>` (k defaults to 4; plain `python cli.py`
-# still opens the menu)
-def sweep_kpartite(k=4, c_max=10):
-    # compute every row first so the columns can be sized to the widest entries
-    rows = []
-    for small in itertools.combinations_with_replacement(range(1, c_max + 1), k - 1):
-        d = sum(small) + 1
-        sizes = list(small) + [d]
-        label = f'K({",".join(str(s) for s in sizes)}):'
-        nimbers = [str(nimber_output(multipartite_AAC_nimber(sizes, p))) for p in range(k)]
-        rows.append((label, nimbers))
-    label_width = max(len(label) for label, _ in rows)
-    nimber_width = max(len(n) for _, nimbers in rows for n in nimbers)
-    for label, nimbers in rows:
-        print((label.ljust(label_width + 2) + '  '.join(n.ljust(nimber_width) for n in nimbers)).rstrip())
-
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1 and sys.argv[1] in ('sweep', 'sweep4'):
-        k = int(sys.argv[2]) if len(sys.argv) > 2 else 4
-        sweep_kpartite(k)
-        sys.exit(0)
     keep_going = menu()
     while keep_going:
         if _last_run:

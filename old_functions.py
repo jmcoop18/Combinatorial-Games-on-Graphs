@@ -1,6 +1,15 @@
 # ============================================================================
-# A place to store old functions that I want documented but don't want to delete
+# A place to store old functions that I want documented but don't want to
+# delete. These are earlier, slower nimber implementations kept for reference;
+# the CLI uses the versions in nimber.py instead. Everything here still runs
+# on its own, but is superseded.
 # ============================================================================
+
+import networkx as nx
+
+from matching import AAC_winner
+from nimber import mex
+
 
 # returns the nimber for AAC on a graph G from a starting vertex v
 def recursive_AAC_nimber(G, v):
@@ -24,7 +33,7 @@ def recursive_AAC_nimber(G, v):
 
 
 # returns the nimber for AAC on a graph G from a starting vertex v
-def AAC_nimber(G, v, memo=None, msize=None):
+def memo_AAC_nimber(G, v, memo=None, msize=None):
     if memo is None: # create empty caches if top level call
         memo = {} # cache for previously calculated nimbers
         msize = {} # cache for previously calculated matchings
@@ -45,12 +54,14 @@ def AAC_nimber(G, v, memo=None, msize=None):
     if winner == 'P2':
         memo[key] = 0
     else:
-        memo[key] = mex(AAC_nimber(new_G, n, memo, msize) for n in G.neighbors(v))
+        memo[key] = mex(memo_AAC_nimber(new_G, n, memo, msize) for n in G.neighbors(v))
     return memo[key]
 
 
+
+
 # original MAC nimber calculator using brute-force and looking through the whole game tree
-def MAC_nimber(G, v, seen=None):
+def recursive_MAC_nimber(G, v, seen=None):
     if seen is None:
         seen = set() # set of previously visited vertices
    
@@ -67,13 +78,13 @@ def MAC_nimber(G, v, seen=None):
     for n in neighbors:
         H = G.copy()
         H.remove_edge(v, n)
-        child_nimbers.append(MAC_nimber(H, n, new_seen))
+        child_nimbers.append(recursive_MAC_nimber(H, n, new_seen))
     return mex(child_nimbers)
 
 
 # tried to implement memoization the way I did last time but it was slower
 # the key is too expensive relative to the recursion it is replacing
-def MAC_nimber(G, v, seen=None, memo=None):
+def memo_MAC_nimber(G, v, seen=None, memo=None):
     if seen is None:
         seen = set() # set of previously visited vertices
         
@@ -99,6 +110,6 @@ def MAC_nimber(G, v, seen=None, memo=None):
     for n in neighbors:
         H = G.copy()
         H.remove_edge(v, n)
-        child_nimbers.append(MAC_nimber(H, n, new_seen, memo))
+        child_nimbers.append(memo_MAC_nimber(H, n, new_seen, memo))
     memo[key] = mex(child_nimbers)
     return memo[key]

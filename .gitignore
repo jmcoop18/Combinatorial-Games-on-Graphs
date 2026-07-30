@@ -3,3 +3,5 @@ __pycache__/
 .claude/
 test.py
 xblossom/target/
+.DS_Store
+even_kernels.py
